@@ -39,8 +39,8 @@ ComposableScan tracks Espresso Network mainnet in real-time. Search blocks, tran
 
 1. **Clone repository**
    ```bash
-   git clone https://github.com/your-org/composablescan.git
-   cd composablescan
+   git clone https://github.com/symulacr/composable-scan.git
+   cd composable-scan
    ```
 
 2. **Install packages**
@@ -270,8 +270,8 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/your-org/composablescan/issues)
-- **Documentation**: [Visit our docs](https://github.com/your-org/composablescan/wiki)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/symulacr/composable-scan/issues)
+- **Documentation**: [Visit our docs](https://github.com/symulacr/composable-scan/wiki)
 - **Espresso Network**: [Official documentation and support](https://docs.espresso.network)
 
 ---

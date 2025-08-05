@@ -2,6 +2,14 @@
   "name": "composable-scan",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/symulacr/composable-scan.git"
+  },
+  "homepage": "https://github.com/symulacr/composable-scan#readme",
+  "bugs": {
+    "url": "https://github.com/symulacr/composable-scan/issues"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

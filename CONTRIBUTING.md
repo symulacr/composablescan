@@ -47,13 +47,13 @@ This project adheres to a code of conduct adapted from the [Contributor Covenant
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/your-username/composablescan.git
-   cd composablescan
+   git clone https://github.com/symulacr/composable-scan.git
+   cd composable-scan
    ```
 
 3. **Add the upstream remote**:
    ```bash
-   git remote add upstream https://github.com/original-owner/composablescan.git
+   git remote add upstream https://github.com/symulacr/composable-scan.git
    ```
 
 4. **Install dependencies**:
