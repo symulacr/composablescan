@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+*.lcov
+/test-results
 
 # next.js
 /.next/
@@ -19,19 +21,27 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+server.log
 
-# env files (can opt-in for committing if needed)
+# local env files (sensitive data)
 .env*
+!env.example
 
 # vercel
 .vercel
@@ -39,3 +49,109 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# development files
+.claude/
+CLAUDE.md
+
+# OS files
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Editor files
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.sublime-*
+.atom/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+/coverage
+/nyc_output
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# API keys and secrets (in case someone accidentally tries to commit them)
+*.key
+*.pem
+*.p12
+*.pfx
+secret*
+*secret*
+*credentials*
+*config*.json
+!public/config*.json
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Package managers
+yarn.lock
+pnpm-lock.yaml
+
+# Environment-specific files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
