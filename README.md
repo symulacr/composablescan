@@ -272,7 +272,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/symulacr/composable-scan/issues)
 - **Documentation**: [Visit our docs](https://github.com/symulacr/composable-scan/wiki)
-- **Espresso Network**: [Official documentation and support](https://docs.espresso.network)
+- **Espresso Network**: [Official documentation and support](http://eng-wiki.espressosys.com/main.html)
 
 ---
 
