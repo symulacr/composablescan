@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-
 async function getMainnetLatestBlock(): Promise<number> {
   const { getApiUrl } = await import('@/lib/config')
   const response = await fetch(getApiUrl('/status/block-height'), {
