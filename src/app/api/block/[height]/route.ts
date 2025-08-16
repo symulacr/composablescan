@@ -21,7 +21,7 @@ export async function GET(
     
 
     const { getApiUrl } = await import('@/lib/config')
-    const apiUrl = getApiUrl('/availability/block/' + height)
+    const apiUrl = getApiUrl('/availability/block/summary/' + height)
     
 
     
@@ -42,12 +42,6 @@ export async function GET(
     
     const blockData = await response.json()
     
-
-    if (blockData.payload) {
-      delete blockData.payload
-    }
-    
-
     
     return NextResponse.json(blockData, {
       headers: {

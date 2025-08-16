@@ -1,4 +1,3 @@
-// Espresso Network data types
 
 export interface EspressoBlock {
   height: number;

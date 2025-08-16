@@ -98,7 +98,6 @@ export default function NamespaceModal({ namespace, isOpen, onClose }: Namespace
 
         {!loading && !error && (
           <div className="space-y-6">
-            {/* Namespace Overview */}
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
               <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100 mb-3">
                 Namespace Overview
@@ -127,7 +126,6 @@ export default function NamespaceModal({ namespace, isOpen, onClose }: Namespace
               </div>
             </div>
 
-            {/* Recent Transactions */}
             {transactions.length > 0 ? (
               <div>
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3">
@@ -184,7 +182,6 @@ export default function NamespaceModal({ namespace, isOpen, onClose }: Namespace
               </div>
             )}
 
-            {/* Rollup Information */}
             {rollupName && (
               <div>
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
@@ -205,7 +202,6 @@ export default function NamespaceModal({ namespace, isOpen, onClose }: Namespace
               </div>
             )}
 
-            {/* Scan Link */}
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => {

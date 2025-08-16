@@ -9,7 +9,7 @@ vi.mock('@/services/api/espressoapi', () => ({
   search: vi.fn(),
   formatBlockTime: vi.fn(() => '1 min ago'),
   formatTransactionHash: vi.fn((hash) => hash.substring(0, 10) + '...'),
-  getCurrentNetwork: vi.fn(() => ({ name: 'Mainnet', baseUrl: 'https://query.main.net.espresso.network', apiVersion: 'v0', wsBaseUrl: 'wss://query.main.net.espresso.network', scanBaseUrl: 'https://explorer.main.net.espresso.network', webWorkerUrl: 'https://explorer.main.net.espresso.network/assets/node_validator_web_worker_api.js-bT9djMJi.js' }))
+  getCurrentNetwork: vi.fn(() => ({ name: 'Mainnet', baseUrl: 'https://query.main.net.espresso.network', apiVersion: 'v0', wsBaseUrl: 'wss://query.main.net.espresso.network', scanBaseUrl: 'https://explorer.main.net.espresso.network', webWorkerUrl: 'https://explorer.main.net.espresso.network/assets/node_validator_web_worker_api.js-bT9djMJi.js' })),
   setNetwork: vi.fn()
 }))
 

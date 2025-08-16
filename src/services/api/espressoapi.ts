@@ -28,9 +28,6 @@ async function makeOptimizedCall(endpoint: string, filterPayload: boolean = true
       if (data.proof?.payload_proof_tx?.proofs) {
         delete data.proof.payload_proof_tx.proofs;
       }
-      if (data.payload) {
-        delete data.payload;
-      }
     }
     
     return data;
@@ -182,7 +179,7 @@ export async function getBlockRange(from: number, to: number) {
 
   const limit = Math.min(to - from + 1, 100);
   const actualTo = from + limit - 1;
-  return makeOptimizedCall(`/availability/block/${from}/${actualTo}`);
+  return makeOptimizedCall(`/availability/block/summaries/${from}/${actualTo}`);
 }
 
 
@@ -300,6 +297,160 @@ export async function getNamespaceTransactions(height: number, namespace: number
   } catch (error) {
 
     throw error;
+  }
+}
+
+interface Transaction {
+  hash: string;
+  index: number;
+  namespace: number;
+}
+
+interface BatchTransaction {
+  hash: string;
+  rollups: number[];
+  height: number;
+  offset: number;
+  time: string;
+}
+
+interface BatchRequest {
+  offset: number;
+  limit: number;
+}
+
+function calculateBatches(totalTxs: number, batchSize: number = 100): BatchRequest[] {
+  const batches: BatchRequest[] = [];
+  for (let offset = 0; offset < totalTxs; offset += batchSize) {
+    batches.push({
+      offset,
+      limit: Math.min(batchSize, totalTxs - offset)
+    });
+  }
+  return batches;
+}
+
+async function fetchBatch(height: number, offset: number, limit: number): Promise<BatchTransaction[]> {
+  const url = `https://query.main.net.espresso.network/v0/explorer/transactions/from/${height}/${offset}/${limit}/block/${height}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.transaction_summaries || [];
+  } catch (error) {
+    return [];
+  }
+}
+
+async function fetchAllBatches(height: number, batches: BatchRequest[]): Promise<BatchTransaction[]> {
+  const promises = batches.map(batch => 
+    fetchBatch(height, batch.offset, batch.limit)
+  );
+  
+  const results = await Promise.allSettled(promises);
+  const allTransactions: BatchTransaction[] = [];
+  
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      allTransactions.push(...result.value);
+    } else {
+    }
+  });
+  
+  return allTransactions;
+}
+
+function sortTransactions(transactions: BatchTransaction[]): BatchTransaction[] {
+  return transactions.sort((a, b) => b.offset - a.offset);
+}
+
+function processTransactionSummary(tx: BatchTransaction): Transaction {
+  return {
+    hash: tx.hash,
+    namespace: tx.rollups[0] || 0,
+    index: tx.offset
+  };
+}
+
+export async function getBlockTransactionsBatch(height: number): Promise<Transaction[]> {
+  try {
+    const blockData = await getBlock(height);
+    const totalTxs = blockData.num_transactions || 0;
+    
+    if (totalTxs === 0) {
+      return [];
+    }
+    
+    const batches = calculateBatches(totalTxs, 100);
+    
+    const batchTransactions = await fetchAllBatches(height, batches);
+    
+    const sortedTransactions = sortTransactions(batchTransactions);
+    
+    return sortedTransactions.map(processTransactionSummary);
+    
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getBlockTransactions(height: number): Promise<Transaction[]> {
+  try {
+    const networkParam = 'mainnet';
+    
+    const response = await makeRobustApiCall(`/api/block-transactions/${height}?network=${networkParam}`);
+    const transactionData = await response.json();
+    
+    if (transactionData && Array.isArray(transactionData.transactions)) {
+      return transactionData.transactions
+        .filter((tx: any) => tx.hash)
+        .map((tx: any, index: number) => ({
+          hash: tx.hash,
+          index: tx.index !== undefined ? tx.index : index,
+          namespace: tx.namespace || tx.transaction?.namespace || 0
+        }));
+    }
+    
+    return [];
+    
+  } catch (error) {
+    try {
+      const transactions: Transaction[] = [];
+      const blockData = await getBlock(height);
+      const numTransactions = blockData.num_transactions || 0;
+      
+      const maxTransactions = Math.min(numTransactions, 50);
+      
+      for (let i = 0; i < maxTransactions; i++) {
+        try {
+          const txData = await getTransaction(height, i);
+          if (txData && txData.hash) {
+            transactions.push({
+              hash: txData.hash,
+              index: i,
+              namespace: txData.transaction?.namespace || 0
+            });
+          } else {
+          }
+        } catch (txError) {
+          continue;
+        }
+      }
+      
+      return transactions;
+    } catch (fallbackError) {
+      throw error;
+    }
   }
 }
 

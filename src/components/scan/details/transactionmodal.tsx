@@ -86,7 +86,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
 
         {transaction && !loading && !error && (
           <div className="space-y-6">
-            {/* Transaction Overview */}
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
               <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3">
                 Transaction Overview
@@ -120,7 +119,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             </div>
 
-            {/* Transaction Hash */}
             <div>
               <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
                 Transaction Hash
@@ -133,7 +131,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             </div>
 
-            {/* Transaction Size */}
             <div>
               <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
                 Transaction Size
@@ -145,7 +142,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             </div>
 
-            {/* Rollup Information */}
             {rollupName && (
               <div>
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
@@ -166,7 +162,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             )}
 
-            {/* Sender Information */}
             {transaction.sender && (
               <div>
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
@@ -180,7 +175,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             )}
 
-            {/* Block Navigation */}
             <div>
               <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
                 Block Information
@@ -204,7 +198,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             </div>
 
-            {/* Timestamps */}
             {transaction.timestamp && (
               <div>
                 <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
@@ -227,7 +220,6 @@ export default function TransactionModal({ transactionHash, isOpen, onClose }: T
               </div>
             )}
 
-            {/* Scan Link */}
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={() => {

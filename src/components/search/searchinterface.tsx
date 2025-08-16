@@ -406,10 +406,8 @@ export default function SearchInterface() {
 
   return (
     <div className="space-y-8">
-      {/* Header with Real-time Insights */}
       <LiveStats liveStreaming={liveStreaming} networkData={networkData} />
 
-      {/* Real-time Search Input */}
       <div className="relative">
         <SearchInput
           query={query}
@@ -420,7 +418,6 @@ export default function SearchInterface() {
           onSearch={handleSearch}
         />
 
-        {/* Live Search Results Dropdown */}
         <SearchResults
           isActive={isActive}
           liveResults={liveResults}
@@ -433,10 +430,8 @@ export default function SearchInterface() {
         />
       </div>
 
-      {/* Selected Search Results */}
       <SearchDetails selectedResults={selectedResults} />
 
-      {/* Quick Actions */}
     </div>
   )
 }

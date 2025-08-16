@@ -53,7 +53,6 @@ export default function SearchResults({
               )}
             </div>
             
-            {/* Show live streaming blocks when no search query */}
             {!query.trim() && streamingBlocks.length > 0 && (
               <div className="space-y-1 border-b border-gray-100 pb-2 mb-2">
                 {streamingBlocks.slice(0, 3).map((block, index) => (

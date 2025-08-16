@@ -427,7 +427,6 @@ function EspressoOmnibox() {
         </div>
       </div>
 
-    {/* Modals */}
     <BlockModal
       blockHeight={blockModalHeight}
       isOpen={blockModalHeight !== null}
