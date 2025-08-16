@@ -1,32 +1,36 @@
 # ComposableScan
 
-ComposableScan tracks Espresso Network mainnet in real-time. Search blocks, transactions, rollups, and namespaces. WebSocket streams provide live block data.
+Espresso Network mainnet explorer. Search blocks, transactions, rollups, namespaces. Unified display, optimized API calls, transaction analysis.
 
 ## Features
 
-### Live Block Tracking
-- **Stream Live Blocks**: WebSocket connects and displays new blocks
-- **Search Quick**: Pattern detection returns results under one second
-- **Search All**: One search bar finds blocks, transactions, rollups, and namespaces
-- **Get Complete Results**: Search returns results with data previews
+### Block Tracking
+- **Live blocks**: WebSocket streams
+- **Fast search**: Pattern detection <1s
+- **Unified search**: blocks, transactions, rollups, namespaces
+- **Complete results**: data previews
+- **Unified display**: single-container layout
+- **Transaction analysis**: expandable lists, namespace filtering
 
 ### Search Types
-- **Find Blocks**: Enter height (`4603571`) or hash (`BLOCK~<hash>`)
-- **Find Transactions**: Enter hash (`TX~<hash>`) with prefix detection
-- **Find Rollups**: Search names (`MOLTEN`, `RARI`, `LogX`) with metadata
-- **Find Namespaces**: Search namespace IDs with rollup data
+- **Blocks**: height (`4603571`) or hash (`BLOCK~<hash>`)
+- **Transactions**: hash (`TX~<hash>`)
+- **Rollups**: names (`MOLTEN`, `RARI`, `LogX`)
+- **Namespaces**: IDs with rollup data
 
 ### Interface
-- **Desktop Ready**: Interface fits desktop and tablet screens
-- **Smooth Animation**: Framer Motion powers transitions
-- **Clear Data Display**: Design highlights blockchain data
-- **Fast Loading**: API calls cache data and execute quick
+- **Responsive**: desktop, tablet screens
+- **Smooth animations**: Framer Motion
+- **Clean design**: highlights blockchain data
+- **Fast loading**: optimized API endpoints
+- **Minimal**: comment-free codebase
+- **Copy buttons**: one-click hash copying
 
 ### Developer Features
-- **Split Components**: React components separate by function
-- **Type Safety**: TypeScript prevents errors across files
-- **Easy Deploy**: Config works across networks
-- **Test Coverage**: Vitest tests components and functions
+- **Components**: React separation by function
+- **TypeScript**: error prevention
+- **Easy deploy**: network config
+- **Tests**: Vitest coverage
 
 ## Quick Start
 
@@ -193,10 +197,11 @@ npm run analyze
 - **Rollup Data**: Web worker parses from official scan
 
 ### Performance
-- Search waits 300ms to reduce API calls
-- Cache stores repeated queries  
-- WebSocket reconnects when dropped
-- Filter removes large response data
+- 300ms search debounce
+- Query caching
+- WebSocket reconnection
+- Summary API endpoints
+- Batch transaction processing
 
 ## Customization
 
