@@ -1,16 +1,20 @@
-# ComposableScan
+# COMPOSABLE SCAN
 
-Espresso Network mainnet explorer. Search blocks, transactions, rollups, namespaces. Unified display, optimized API calls, transaction analysis.
+Real-time Espresso Network explorer with live network statistics and unified search interface.
 
 ## Features
 
-### Block Tracking
-- **Live blocks**: WebSocket streams
-- **Fast search**: Pattern detection <1s
-- **Unified search**: blocks, transactions, rollups, namespaces
-- **Complete results**: data previews
-- **Unified display**: single-container layout
-- **Transaction analysis**: expandable lists, namespace filtering
+### Real-time Network Statistics
+- **Live Transactions**: TXs count updates every 5 blocks
+- **Payload Data**: Total network data updated every 5 minutes
+- **Success Rate**: Network success percentage updated every 5 minutes
+- **Live Blocks**: Real-time block streaming via WebSocket
+
+### Search & Discovery
+- **Unified Search**: blocks, transactions, rollups, namespaces
+- **Fast Pattern Detection**: <1s response time
+- **Complete Data Previews**: expandable transaction lists
+- **Namespace Filtering**: rollup-specific data
 
 ### Search Types
 - **Blocks**: height (`4603571`) or hash (`BLOCK~<hash>`)
@@ -19,18 +23,11 @@ Espresso Network mainnet explorer. Search blocks, transactions, rollups, namespa
 - **Namespaces**: IDs with rollup data
 
 ### Interface
-- **Responsive**: desktop, tablet screens
-- **Smooth animations**: Framer Motion
-- **Clean design**: highlights blockchain data
-- **Fast loading**: optimized API endpoints
-- **Minimal**: comment-free codebase
-- **Copy buttons**: one-click hash copying
-
-### Developer Features
-- **Components**: React separation by function
-- **TypeScript**: error prevention
-- **Easy deploy**: network config
-- **Tests**: Vitest coverage
+- **Clean Minimal Design**: SVG icons, no emojis
+- **Responsive Layout**: desktop and tablet optimized
+- **Real-time Updates**: WebSocket streaming
+- **Fast API Integration**: optimized endpoints
+- **Comment-free Codebase**: clean production code
 
 ## Quick Start
 
@@ -43,8 +40,8 @@ Espresso Network mainnet explorer. Search blocks, transactions, rollups, namespa
 
 1. **Clone repository**
    ```bash
-   git clone https://github.com/symulacr/composable-scan.git
-   cd composable-scan
+   git clone git@github.com:symulacr/composable.git
+   cd composable
    ```
 
 2. **Install packages**
@@ -107,38 +104,46 @@ Deploy to Vercel, Netlify, or AWS:
 
 ## Code Structure
 
-### Files
+### Current Architecture
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── api/               # API routes for CORS
+│   ├── api/rollup/        # Unified rollup API endpoint
 │   ├── layout.tsx         # Root layout
 │   └── page.tsx           # Homepage
 ├── components/            # React components
 │   ├── search/           # Search interface
-│   │   ├── searchinput.tsx
-│   │   ├── searchresults.tsx
-│   │   ├── searchdetails.tsx
-│   │   └── livestats.tsx
-│   ├── scan/            # Data display  
-│   └── ui/               # UI components
+│   │   ├── input.tsx     # Search input component
+│   │   ├── interface.tsx # Main search interface
+│   │   ├── results.tsx   # Search results display
+│   │   ├── details.tsx   # Result details modal
+│   │   └── stats.tsx     # Live network statistics
+│   └── ui/               # Shadcn UI components
 ├── services/             # External services
 │   ├── api/              # Espresso Network APIs
-│   └── websocket/        # Live streaming
+│   │   ├── discovery.ts  # Network statistics APIs
+│   │   ├── main.ts       # Core API functions
+│   │   └── resolver.ts   # Rollup data resolver
+│   └── ws/               # WebSocket streaming
+│       └── stream.ts     # Real-time block streaming
 ├── hooks/                # React hooks
+│   └── useNet.ts         # Network data hook
 ├── contexts/             # React contexts
-├── types/                # TypeScript types
-└── lib/                  # Utils and config
+├── types/                # TypeScript definitions
+├── lib/                  # Utils and configuration
+│   ├── config.ts         # Environment configuration
+│   ├── rollup-parser.ts  # Rollup data parsing
+│   └── utils.ts          # Utility functions
 ```
 
 ### Tech Stack
-- **Framework**: Next.js 14 with App Router
+- **Framework**: Next.js 15.4.4 with App Router and Turbopack
 - **Language**: TypeScript with strict checking
-- **Styling**: Tailwind CSS with shadcn/ui
-- **Animation**: Framer Motion
-- **State**: React hooks with Context API
-- **Testing**: Vitest with React Testing Library
-- **Build**: Next.js bundling
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Icons**: Lucide React SVG icons
+- **State**: React hooks and Context API
+- **Real-time**: WebSocket streaming
+- **APIs**: REST endpoints with environment configuration
 
 ## Search Patterns
 
@@ -156,38 +161,24 @@ ComposableScan detects search types:
 
 ## Development
 
-### Run Tests
+### Build and Run
 ```bash
-# Run unit tests
-npm test
+# Development server
+npm run dev
 
-# Run tests in watch mode  
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-### Check Code
-```bash
-# Type checking
-npm run type-check
-
-# Linting
-npm run lint
-
-# Format code
-npm run format
-```
-
-### Build for Production
-```bash
-# Create production build
+# Production build
 npm run build
 
-# Check bundle size
-npm run analyze
+# Start production server
+npm start
 ```
+
+### Network Statistics APIs
+The application fetches real-time network data from three endpoints:
+
+- **Transaction Count**: `/v0/node/transactions/count` - Updates every 5 blocks
+- **Payload Size**: `/v0/node/payloads/total-size` - Updates every 5 minutes  
+- **Success Rate**: `/v0/status/success-rate` - Updates every 5 minutes
 
 ## API Setup
 
@@ -206,9 +197,9 @@ npm run analyze
 ## Customization
 
 ### Add New Search Types
-1. Extend the `detectSearchType` function in `searchinterface.tsx`
-2. Add API integration in `services/api/espressoapi.ts`
-3. Create display components in `components/search/searchdetails.tsx`
+1. Extend the `detectSearchType` function in `components/search/interface.tsx`
+2. Add API integration in `services/api/main.ts`
+3. Create display components in `components/search/details.tsx`
 4. Add TypeScript types in `types/espresso.ts`
 
 ### Change Styling
@@ -275,8 +266,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/symulacr/composable-scan/issues)
-- **Documentation**: [Visit our docs](https://github.com/symulacr/composable-scan/wiki)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/symulacr/composable/issues)
 - **Espresso Network**: [Official documentation and support](http://eng-wiki.espressosys.com/main.html)
 
 ---
