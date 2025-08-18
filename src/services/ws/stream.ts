@@ -1,4 +1,7 @@
 
+import { getWebSocketUrl } from '../../lib/config'
+import { getLatestBlockHeight } from '../api/discovery'
+
 export interface StreamingBlock {
   height: number;
   transactions: number;
@@ -31,30 +34,19 @@ export class EspressoBlockStream {
 
   }
 
-  async connect(startHeight?: number) {
+  async connect() {
     try {
-
       if (typeof window === 'undefined' || typeof WebSocket === 'undefined') {
-
         if (this.onErrorCallback) {
           this.onErrorCallback(new Error('WebSocket not supported'));
         }
         return;
       }
       
-
-      if (!startHeight) {
-
-        const { discoverLatestBlock } = await import('../api/blockdiscovery');
-        startHeight = await discoverLatestBlock();
-
-      }
-
-      this.startHeight = startHeight;
+      const latestHeight = await getLatestBlockHeight();
+      this.startHeight = latestHeight;
       
-
-      const { getWebSocketUrl } = await import('../../lib/config');
-      const wsUrl = getWebSocketUrl(`/availability/stream/blocks/${startHeight}`);
+      const wsUrl = getWebSocketUrl(`/availability/stream/blocks/${latestHeight}`);
 
       this.ws = new WebSocket(wsUrl);
 
@@ -199,9 +191,11 @@ export class EspressoBlockStream {
     
 
     
-    setTimeout(() => {
-      if (this.startHeight) {
-        this.connect(this.startHeight);
+    setTimeout(async () => {
+      try {
+        await this.connect();
+      } catch (error) {
+        await this.connect();
       }
     }, delay);
   }

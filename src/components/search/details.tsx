@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { ExternalLink, ChevronDown, ChevronRight, Loader2 } from "lucide-react"
-import { formatTransactionSize, formatTransactionTimestamp, getBlockTransactions } from '@/services/api/espressoapi'
-import { getRollupName, getAllRollups } from '@/services/api/rollupresolver'
+import { formatBlockSize, formatBlockTime, getBlockTransactionsBatch } from '@/services/api/main'
+import { getRollupName, getAllRollups } from '@/services/api/resolver'
 
 interface Transaction {
   hash: string;
@@ -91,7 +91,7 @@ function BlockDetails({ result }: { result: SearchResult }) {
       setBatchState(prev => ({ ...prev, loading: true, error: null, progress: 0, total: 0 }))
       
       try {
-        const blockTransactions = await getBlockTransactions(blockHeight)
+        const blockTransactions = await getBlockTransactionsBatch(blockHeight)
         const namespaces = new Set(blockTransactions.map(tx => tx.namespace))
         
         setBatchState(prev => ({
@@ -248,7 +248,7 @@ function BlockDetails({ result }: { result: SearchResult }) {
                         <div key={index} className="flex items-center gap-3 py-2 text-sm border-b border-gray-100 last:border-b-0">
                           <span className="text-gray-500 font-mono">#{tx.index}:</span>
                           <span className="font-mono text-xs text-gray-900 flex-1 min-w-0 truncate">
-                            TX~{tx.hash.slice(0, 8)}...
+                            {tx.hash.startsWith('TX~') ? tx.hash : `TX~${tx.hash}`}
                           </span>
                           <CopyButton text={tx.hash} label="transaction hash" />
                           <span className="text-gray-400">|</span>
@@ -313,7 +313,7 @@ function TransactionDetails({ result }: { result: SearchResult }) {
             )}
             <div>
               <span className="text-gray-500">Size (bytes):</span>
-              <div className="font-mono text-gray-900">{formatTransactionSize((result.data as any).transaction?.tx_size_bytes)}</div>
+              <div className="font-mono text-gray-900">{(result.data as any).transaction?.tx_size_bytes ? formatBlockSize((result.data as any).transaction.tx_size_bytes) : 'Unknown'}</div>
             </div>
             <div>
               <span className="text-gray-500">Block Height:</span>
@@ -331,7 +331,7 @@ function TransactionDetails({ result }: { result: SearchResult }) {
             {(result.data as any).transaction?.timestamp && (
               <div>
                 <span className="text-gray-500">Timestamp:</span>
-                <div className="font-mono text-gray-900">{formatTransactionTimestamp((result.data as any).transaction.timestamp)}</div>
+                <div className="font-mono text-gray-900">{(result.data as any).transaction.timestamp ? formatBlockTime((result.data as any).transaction.timestamp) : 'Unknown'}</div>
               </div>
             )}
             {(result.data as any).transaction?.human_readable_time && (

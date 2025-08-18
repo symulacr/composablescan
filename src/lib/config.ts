@@ -7,13 +7,29 @@ interface NetworkConfig {
   webWorkerUrl: string
 }
 
+if (typeof window === 'undefined') {
+  const required = [
+    'NEXT_PUBLIC_MAINNET_API_BASE_URL',
+    'NEXT_PUBLIC_MAINNET_API_VERSION', 
+    'NEXT_PUBLIC_MAINNET_WS_BASE_URL',
+    'NEXT_PUBLIC_MAINNET_SCAN_BASE_URL',
+    'NEXT_PUBLIC_MAINNET_WEB_WORKER_URL'
+  ];
+  
+  const missing = required.filter(key => !process.env[key]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+}
+
 const config = {
-  MAINNET_API_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_API_BASE_URL || 'https://query.main.net.espresso.network',
-  MAINNET_API_VERSION: process.env.NEXT_PUBLIC_MAINNET_API_VERSION || 'v0',
-  MAINNET_WS_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_WS_BASE_URL || 'wss://query.main.net.espresso.network',
-  MAINNET_SCAN_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_SCAN_BASE_URL || 'https://explorer.main.net.espresso.network',
-  MAINNET_WEB_WORKER_URL: process.env.NEXT_PUBLIC_MAINNET_WEB_WORKER_URL || 'https://explorer.main.net.espresso.network/assets/node_validator_web_worker_api.js-bT9djMJi.js',
-  CURRENT_NETWORK: process.env.NEXT_PUBLIC_NETWORK || 'mainnet'
+  MAINNET_API_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_API_BASE_URL!,
+  MAINNET_API_VERSION: process.env.NEXT_PUBLIC_MAINNET_API_VERSION!,
+  MAINNET_WS_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_WS_BASE_URL!,
+  MAINNET_SCAN_BASE_URL: process.env.NEXT_PUBLIC_MAINNET_SCAN_BASE_URL!,
+  MAINNET_WEB_WORKER_URL: process.env.NEXT_PUBLIC_MAINNET_WEB_WORKER_URL!,
+  CURRENT_NETWORK: process.env.NEXT_PUBLIC_NETWORK || 'mainnet',
+  NETWORK_STATS_REFRESH_MS: parseInt(process.env.NEXT_PUBLIC_NETWORK_STATS_REFRESH_MS || '30000')
 }
 
 const MAINNET_CONFIG: NetworkConfig = {
@@ -48,4 +64,9 @@ export const getWebWorkerUrl = (): string => {
   const network = getCurrentNetworkConfig()
   return network.webWorkerUrl
 }
+
+export const getNetworkStatsRefreshMs = (): number => {
+  return config.NETWORK_STATS_REFRESH_MS
+}
+
 export { config }

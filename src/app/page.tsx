@@ -1,4 +1,4 @@
-import SearchInterface from "@/components/search/searchinterface"
+import SearchInterface from "@/components/search/interface"
 
 export default function Home() {
   return (

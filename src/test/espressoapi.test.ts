@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getBlock, getTransactionByHash, formatBlockTime, formatTransactionHash } from '@/services/api/espressoapi'
+import { getBlock, getTransactionByHash, formatBlockTime, formatTransactionHash } from '@/services/api/main'
 
 
 const mockFetch = vi.fn()

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { resolveRollupName, getRollupName } from '@/services/api/rollupresolver'
+import { resolveRollupName, getRollupName } from '@/services/api/resolver'
 
 
 const mockFetch = vi.fn()

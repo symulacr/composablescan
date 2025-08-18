@@ -1,4 +1,15 @@
 import { getCurrentNetworkConfig, getApiUrl } from '@/lib/config'
+import { makeApiCall, getLatestBlockHeight } from './discovery'
+import { 
+  DEFAULT_BATCH_SIZE, 
+  MAX_BATCH_SIZE, 
+  DEFAULT_BLOCK_TIME_SECONDS,
+  DEFAULT_HASH_DISPLAY_LENGTH,
+  DEFAULT_TX_DISPLAY_LENGTH,
+  BYTES_PER_KB,
+  BYTES_PER_MB,
+  BYTES_PER_GB
+} from '@/types/espresso'
 
 const MAINNET_CONFIG = getCurrentNetworkConfig();
 
@@ -40,15 +51,11 @@ async function makeOptimizedCall(endpoint: string, filterPayload: boolean = true
 
 export async function getBlockByHash(hash: string) {
   try {
-    const networkParam = 'mainnet';
-    
 
     const hashForApi = hash.startsWith('BLOCK~') ? hash : `BLOCK~${hash}`;
     
-    const response = await fetch(`/api/block-hash/${encodeURIComponent(hashForApi)}?network=${networkParam}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const blockHashUrl = getApiUrl(`/availability/block/hash/${encodeURIComponent(hashForApi)}`)
+    const response = await makeApiCall(blockHashUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: Failed to fetch block with hash ${hash}`);
@@ -87,50 +94,6 @@ export async function getBlockByHash(hash: string) {
 }
 
 
-async function makeRobustApiCall(url: string, options?: RequestInit): Promise<Response> {
-  const maxRetries = 3
-  const baseDelay = 1000
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-
-      if (!navigator.onLine) {
-        throw new Error('No internet connection')
-      }
-      
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers
-        }
-      })
-      
-      if (response.ok) {
-        return response
-      }
-      
-
-      if (response.status >= 400 && response.status < 500) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      if (attempt === maxRetries) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-    } catch (error) {
-      if (attempt === maxRetries) {
-        throw error
-      }
-      
-
-      const delay = baseDelay * Math.pow(2, attempt - 1)
-      await new Promise(resolve => setTimeout(resolve, delay))
-    }
-  }
-  
-  throw new Error('Max retries exceeded')
-}
 
 
 export async function getBlock(height: number) {
@@ -140,9 +103,8 @@ export async function getBlock(height: number) {
   }
   
   try {
-    const networkParam = 'mainnet';
-    
-    const response = await makeRobustApiCall(`/api/block/${height}?network=${networkParam}`)
+    const blockSummaryUrl = getApiUrl(`/availability/block/${height}`)
+    const response = await makeApiCall(blockSummaryUrl)
     const blockData = await response.json();
     
     const blockHeight = blockData.header?.fields?.height || height;
@@ -175,25 +137,15 @@ export async function getBlock(height: number) {
   }
 }
 
-export async function getBlockRange(from: number, to: number) {
-
-  const limit = Math.min(to - from + 1, 100);
-  const actualTo = from + limit - 1;
-  return makeOptimizedCall(`/availability/block/summaries/${from}/${actualTo}`);
-}
 
 
 export async function getTransactionByHash(hash: string) {
   try {
-    const networkParam = 'mainnet';
-    
 
     const hashForApi = hash.startsWith('TX~') ? hash : `TX~${hash}`;
     
-    const response = await fetch(`/api/transaction-hash/${encodeURIComponent(hashForApi)}?network=${networkParam}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const transactionUrl = getApiUrl(`/availability/transaction/hash/${encodeURIComponent(hashForApi)}`)
+    const response = await makeApiCall(transactionUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: Failed to fetch transaction with hash ${hash}`);
@@ -219,19 +171,8 @@ async function enhanceTransactionData(rawData: any, originalHash: string) {
   const index = rawData.index || 0;
   const namespace = transaction.namespace;
   
-
-  let blockHash = null;
-  let timestamp = null;
-  
-  if (blockHeight > 0) {
-    try {
-      const blockData = await getBlock(blockHeight);
-      blockHash = blockData.hash;
-      timestamp = blockData.timestamp;
-    } catch (error) {
-
-    }
-  }
+  const blockHash = null;
+  const timestamp = null;
   
 
   let txSizeBytes = null;
@@ -273,19 +214,12 @@ async function enhanceTransactionData(rawData: any, originalHash: string) {
   };
 }
 
-export async function getTransaction(height: number, index: number) {
-  return makeOptimizedCall(`/availability/transaction/${height}/${index}`);
-}
 
 
 export async function getNamespaceTransactions(height: number, namespace: number) {
   try {
-    const networkParam = 'mainnet';
-    
-    const response = await fetch(`/api/namespace/${height}/${namespace}?network=${networkParam}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    const namespaceUrl = getApiUrl(`/availability/block/${height}/namespace/${namespace}`)
+    const response = await makeApiCall(namespaceUrl);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: Failed to fetch namespace ${namespace} in block ${height}`);
@@ -319,7 +253,7 @@ interface BatchRequest {
   limit: number;
 }
 
-function calculateBatches(totalTxs: number, batchSize: number = 100): BatchRequest[] {
+function calculateBatches(totalTxs: number, batchSize: number = DEFAULT_BATCH_SIZE): BatchRequest[] {
   const batches: BatchRequest[] = [];
   for (let offset = 0; offset < totalTxs; offset += batchSize) {
     batches.push({
@@ -331,7 +265,7 @@ function calculateBatches(totalTxs: number, batchSize: number = 100): BatchReque
 }
 
 async function fetchBatch(height: number, offset: number, limit: number): Promise<BatchTransaction[]> {
-  const url = `https://query.main.net.espresso.network/v0/explorer/transactions/from/${height}/${offset}/${limit}/block/${height}`;
+  const url = getApiUrl(`/explorer/transactions/from/${height}/${offset}/${limit}/block/${height}`);
   
   try {
     const response = await fetch(url, {
@@ -391,7 +325,7 @@ export async function getBlockTransactionsBatch(height: number): Promise<Transac
       return [];
     }
     
-    const batches = calculateBatches(totalTxs, 100);
+    const batches = calculateBatches(totalTxs, MAX_BATCH_SIZE);
     
     const batchTransactions = await fetchAllBatches(height, batches);
     
@@ -404,69 +338,9 @@ export async function getBlockTransactionsBatch(height: number): Promise<Transac
   }
 }
 
-export async function getBlockTransactions(height: number): Promise<Transaction[]> {
-  try {
-    const networkParam = 'mainnet';
-    
-    const response = await makeRobustApiCall(`/api/block-transactions/${height}?network=${networkParam}`);
-    const transactionData = await response.json();
-    
-    if (transactionData && Array.isArray(transactionData.transactions)) {
-      return transactionData.transactions
-        .filter((tx: any) => tx.hash)
-        .map((tx: any, index: number) => ({
-          hash: tx.hash,
-          index: tx.index !== undefined ? tx.index : index,
-          namespace: tx.namespace || tx.transaction?.namespace || 0
-        }));
-    }
-    
-    return [];
-    
-  } catch (error) {
-    try {
-      const transactions: Transaction[] = [];
-      const blockData = await getBlock(height);
-      const numTransactions = blockData.num_transactions || 0;
-      
-      const maxTransactions = Math.min(numTransactions, 50);
-      
-      for (let i = 0; i < maxTransactions; i++) {
-        try {
-          const txData = await getTransaction(height, i);
-          if (txData && txData.hash) {
-            transactions.push({
-              hash: txData.hash,
-              index: i,
-              namespace: txData.transaction?.namespace || 0
-            });
-          } else {
-          }
-        } catch (txError) {
-          continue;
-        }
-      }
-      
-      return transactions;
-    } catch (fallbackError) {
-      throw error;
-    }
-  }
-}
-
-export async function getHeader(height: number) {
-  return makeOptimizedCall(`/availability/header/${height}`, false);
-}
 
 
-export async function getBlockScan(height: number) {
-  try {
-    return makeOptimizedCall(`/scan/block/${height}`, false);
-  } catch (error) {
 
-    return getBlock(height);
-  }
-}
 
 
 export async function search(query: string, type: 'block' | 'transaction' | 'namespace' | 'rollup_name') {
@@ -497,8 +371,7 @@ export async function search(query: string, type: 'block' | 'transaction' | 'nam
       }
       
 
-      const { discoverLatestBlock } = await import('./blockdiscovery');
-      const latestBlockHeight = await discoverLatestBlock();
+      const latestBlockHeight = await getLatestBlockHeight();
       
       return {
         type: 'namespace',
@@ -541,29 +414,20 @@ export function formatBlockTime(timestamp: number | string): string {
   return date.toLocaleDateString();
 }
 
-export function formatTransactionHash(hash: string, length: number = 10): string {
+export function formatTransactionHash(hash: string, length: number = DEFAULT_HASH_DISPLAY_LENGTH): string {
   if (hash.length <= length) return hash;
   return `${hash.substring(0, length)}...`;
 }
 
 export function formatBlockSize(bytes: number): string {
   if (!bytes || bytes === 0) return '0 B';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  if (bytes < BYTES_PER_KB) return `${bytes} B`;
+  if (bytes < BYTES_PER_MB) return `${(bytes / BYTES_PER_KB).toFixed(1)} KB`;
+  if (bytes < BYTES_PER_GB) return `${(bytes / BYTES_PER_MB).toFixed(1)} MB`;
+  return `${(bytes / BYTES_PER_GB).toFixed(1)} GB`;
 }
 
-export function formatTransactionSize(bytes: number | null): string {
-  if (!bytes || bytes === 0) return 'Unknown';
-  return formatBlockSize(bytes);
-}
 
-export function formatTransactionTimestamp(timestamp: number | null): string {
-  if (!timestamp) return 'Unknown';
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleString();
-}
 
 export function getTransactionSource(transaction: any): string {
 
@@ -576,4 +440,17 @@ export function getTransactionSource(transaction: any): string {
 export function formatNumber(num: number): string {
   if (!num || isNaN(num)) return '0';
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+export function formatBytes(bytes: number): string {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = bytes
+  let unitIndex = 0
+  
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+  
+  return `${size.toFixed(1)}${units[unitIndex]}`
 }

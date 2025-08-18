@@ -1,9 +1,8 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { formatNumber, formatTransactionSize } from '@/services/api/espressoapi'
-import { getRollupName, getAllRollups } from '@/services/api/rollupresolver'
-import { StreamingBlock } from '@/services/websocket/espressostream'
+import { formatNumber, formatBlockSize } from '@/services/api/main'
+import { getRollupName, getAllRollups } from '@/services/api/resolver'
 
 interface SearchResult {
   type: 'block' | 'transaction' | 'rollup' | 'namespace' | 'block_hash' | 'error' | 'loading'
@@ -18,7 +17,7 @@ interface SearchResultsProps {
   isSearching: boolean
   liveStreaming: boolean
   query: string
-  streamingBlocks: StreamingBlock[]
+  streamingBlocks: any[]
   onResultSelect: (result: SearchResult) => void
   onStreamingBlockSelect: (height: number) => void
 }
@@ -44,38 +43,9 @@ export default function SearchResults({
         >
           <div className="p-4 space-y-2">
             <div className="text-xs text-gray-500 uppercase tracking-wide flex items-center gap-2">
-              Live Search Results
-              {liveStreaming && (
-                <span className="text-xs text-green-600 bg-green-50 px-1 rounded flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  STREAMING
-                </span>
-              )}
+              Search Results
             </div>
             
-            {!query.trim() && streamingBlocks.length > 0 && (
-              <div className="space-y-1 border-b border-gray-100 pb-2 mb-2">
-                {streamingBlocks.slice(0, 3).map((block, index) => (
-                  <button
-                    key={`stream-${block.height}`}
-                    className="w-full text-left p-2 hover:bg-blue-50 text-sm rounded border border-blue-100"
-                    onClick={() => onStreamingBlockSelect(block.height)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                        live
-                      </span>
-                      <span className="font-medium text-gray-900">Block #{formatNumber(block.height)}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">{block.transactions} txs</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500">{block.size ? `${block.size} bytes` : 'Unknown size'}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
 
             <div className="space-y-1">
               {isSearching && liveResults.length === 0 && (
@@ -166,7 +136,7 @@ function SearchResultItem({ result, onSelect }: { result: SearchResult; onSelect
                 )}
                 <div>Block: #{(result.data as any).transaction?.block_height || 'Unknown'}</div>
                 {(result.data as any).transaction?.tx_size_bytes && (
-                  <div>Size: {formatTransactionSize((result.data as any).transaction.tx_size_bytes)}</div>
+                  <div>Size: {(result.data as any).transaction.tx_size_bytes ? formatBlockSize((result.data as any).transaction.tx_size_bytes) : 'Unknown'}</div>
                 )}
                 {(result.data as any).transaction?.human_readable_time && (
                   <div>Time: {(result.data as any).transaction.human_readable_time}</div>

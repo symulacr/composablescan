@@ -6,6 +6,8 @@ interface RollupInfo {
   scan: string;
 }
 
+import { parseRollupData } from '@/lib/rollup-parser'
+
 interface RollupMapping {
   [rollupName: string]: number;
 }
@@ -14,9 +16,7 @@ let rollupMapping: RollupMapping | null = null;
 let rollupList: RollupInfo[] = [];
 let isLoading = false;
 
-
-const WEB_WORKER_PROXY_URL = '/api/rollup-worker';
-
+const WEB_WORKER_PROXY_URL = '/api/rollup?raw=true';
 
 async function fetchRollupMetadata(): Promise<RollupInfo[]> {
   try {
@@ -26,37 +26,8 @@ async function fetchRollupMetadata(): Promise<RollupInfo[]> {
       throw new Error(`Failed to fetch web worker: ${response.status}`);
     }
     
-    let content = await response.text();
-    
-
-    content = content.replace(/Hl=1397311310,qr=new k\(Hl/g, 'qr=new k(1397311310');
-    
-
-    const rollupData: RollupInfo[] = [];
-    const regex = /new k\(([^,]+),"([^"]+)",new URL\("([^"]+)"\),new URL\("([^"]+)"\)\)/g;
-    let match;
-    
-    while ((match = regex.exec(content)) !== null) {
-      const [, namespaceStr, name, website, scan] = match;
-      
-
-      let namespace: number;
-      if (namespaceStr === '1397311310') {
-        namespace = 1397311310;
-      } else if (/^\d+$/.test(namespaceStr)) {
-        namespace = parseInt(namespaceStr);
-      } else {
-
-        continue;
-      }
-      
-      rollupData.push({
-        namespace: namespace,
-        name: name,
-        website: website,
-        scan: scan
-      });
-    }
+    const content = await response.text();
+    const rollupData = parseRollupData(content);
     
     if (rollupData.length === 0) {
       throw new Error('No rollup data found in web worker - regex pattern may need updating');
@@ -132,7 +103,7 @@ export function getRollupName(namespace: number): string | null {
 
 export async function findRollupByNamespace(targetNamespace: number): Promise<RollupInfo | null> {
   try {
-    const response = await fetch(`/api/rollup-search/${targetNamespace}`);
+    const response = await fetch(`/api/rollup?namespace=${targetNamespace}`);
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -159,7 +130,7 @@ export async function universalRollupSearch(query: string): Promise<RollupInfo[]
       return [];
     }
     
-    const response = await fetch(`/api/rollup-universal/${encodeURIComponent(searchTerm)}`, {
+    const response = await fetch(`/api/rollup?query=${encodeURIComponent(searchTerm)}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -194,6 +165,3 @@ export function isRollupResolverReady(): boolean {
 }
 
 
-if (typeof window !== 'undefined') {
-  initializeRollupResolver();
-}

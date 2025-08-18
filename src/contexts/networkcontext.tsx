@@ -1,9 +1,9 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, ReactNode } from 'react'
-import { getCurrentNetwork } from '@/services/api/espressoapi'
+import { createContext, useContext, ReactNode } from 'react'
+import { getCurrentNetwork } from '@/services/api/main'
 
-interface NetworkContextType {
+interface NetCtx {
   currentNetwork: 'mainnet'
   networkInfo: {
     name: string
@@ -15,31 +15,28 @@ interface NetworkContextType {
   }
 }
 
-const NetworkContext = createContext<NetworkContextType | undefined>(undefined)
+const NetContext = createContext<NetCtx | undefined>(undefined)
 
-interface NetworkProviderProps {
+interface NetProviderProps {
   children: ReactNode
 }
 
-export function NetworkProvider({ children }: NetworkProviderProps) {
+export function NetworkProvider({ children }: NetProviderProps) {
   const currentNetwork = 'mainnet'
   const networkInfo = getCurrentNetwork()
 
-  useEffect(() => {
-  }, [])
-
   return (
-    <NetworkContext.Provider value={{
+    <NetContext.Provider value={{
       currentNetwork,
       networkInfo
     }}>
       {children}
-    </NetworkContext.Provider>
+    </NetContext.Provider>
   )
 }
 
 export function useNetwork() {
-  const context = useContext(NetworkContext)
+  const context = useContext(NetContext)
   if (context === undefined) {
     throw new Error('useNetwork must be used within a NetworkProvider')
   }

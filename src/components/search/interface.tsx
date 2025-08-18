@@ -1,20 +1,30 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useNetwork } from '@/contexts/networkcontext'
-import { useDualNetworkData } from '@/hooks/usedualnetwork'
-import { getBlock, getTransactionByHash, getBlockByHash } from '@/services/api/espressoapi'
-import { universalRollupSearch, initializeRollupResolver, getRollupName } from '@/services/api/rollupresolver'
-import { getBlockStream, StreamingBlock, StreamingStats } from '@/services/websocket/espressostream'
-import SearchInput from './searchinput'
-import SearchResults from './searchresults'
-import SearchDetails from './searchdetails'
-import LiveStats from './livestats'
+import { useDualNetworkData } from '@/hooks/useNet'
+import { getBlock, getTransactionByHash, getBlockByHash } from '@/services/api/main'
+import { universalRollupSearch, initializeRollupResolver, getRollupName } from '@/services/api/resolver'
+import { 
+  SEARCH_DEBOUNCE_MS, 
+  BASE64_HASH_LENGTH, 
+  HEX_HASH_LENGTH, 
+  MAX_BLOCK_HEIGHT_DIGITS,
+  MIN_NAMESPACE_DIGITS,
+  MAX_NAMESPACE_DIGITS,
+  MIN_SEARCH_LENGTH,
+  MIN_SEARCH_LENGTH_NON_NUMERIC
+} from '@/types/espresso'
+import SearchInput from './input'
+import SearchResults from './results'
+import SearchDetails from './details'
+import LiveStats from './stats'
 
 interface NetworkData {
   latestBlock: number
   totalTransactions: number
-  avgBlockTime: number
+  totalPayloadSize: number
+  successRate: number
   isConnected: boolean
 }
 
@@ -27,30 +37,24 @@ interface SearchResult {
 
 export default function SearchInterface() {
   const { currentNetwork } = useNetwork()
-  const dualData = useDualNetworkData()
-  const currentData = dualData[currentNetwork]
+  const netData = useDualNetworkData()
+  const currentData = netData[currentNetwork]
   
   const [query, setQuery] = useState("")
   const [isActive, setIsActive] = useState(false)
   const [liveResults, setLiveResults] = useState<SearchResult[]>([])
   const [selectedResults, setSelectedResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [liveStreaming, setLiveStreaming] = useState(false)
-  const [streamingBlocks, setStreamingBlocks] = useState<StreamingBlock[]>([])
-  const [streamingStats, setStreamingStats] = useState<StreamingStats | null>(null)
+  const searchRef = useRef('')
 
 
 
-  const networkData: NetworkData = streamingStats && streamingStats.isConnected ? {
-    latestBlock: streamingStats.latestBlock,
-    totalTransactions: streamingStats.totalTransactions,
-    avgBlockTime: streamingStats.avgBlockTime > 0 ? streamingStats.avgBlockTime : (currentData.avgBlockTime || 12),
-    isConnected: streamingStats.isConnected
-  } : {
+  const networkData: NetworkData = {
     latestBlock: currentData.latestBlock,
-    totalTransactions: Math.floor(currentData.recentBlocks.reduce((sum, block) => sum + (block.transactions || 0), 0) / Math.max(currentData.recentBlocks.length, 1)),
-    avgBlockTime: currentData.avgBlockTime > 0 ? currentData.avgBlockTime : 12,
-    isConnected: liveStreaming ? false : currentData.isConnected
+    totalTransactions: currentData.totalTransactions || 0,
+    totalPayloadSize: currentData.totalPayloadSize || 0,
+    successRate: currentData.successRate || 0,
+    isConnected: currentData.isConnected
   }
 
 
@@ -58,29 +62,23 @@ export default function SearchInterface() {
     const trimmedInput = input.trim()
     if (!trimmedInput) return 'invalid'
     
-
     if (trimmedInput.startsWith('TX~')) return 'transaction'
-    
-
     if (trimmedInput.startsWith('BLOCK~')) return 'block_hash'
     
-
-    if (/^[A-Za-z0-9+/=_-]{44}$/.test(trimmedInput)) {
-
-      return 'transaction'
-    }
+    const base64Pattern = new RegExp(`^[A-Za-z0-9+/=_-]{${BASE64_HASH_LENGTH}}$`)
+    const hexWithPrefixPattern = new RegExp(`^0x[a-fA-F0-9]{${HEX_HASH_LENGTH}}$`)
+    const hexPattern = new RegExp(`^[a-fA-F0-9]{${HEX_HASH_LENGTH}}$`)
     
-
-    if (/^0x[a-fA-F0-9]{64}$/.test(trimmedInput)) return 'block_hash'
-    if (/^[a-fA-F0-9]{64}$/.test(trimmedInput)) return 'transaction'
+    if (base64Pattern.test(trimmedInput)) return 'transaction'
+    if (hexWithPrefixPattern.test(trimmedInput)) return 'block_hash'  
+    if (hexPattern.test(trimmedInput)) return 'transaction'
     
-
-    if (/^\d{1,12}$/.test(trimmedInput)) return 'block_or_namespace'
+    const blockHeightPattern = new RegExp(`^\\d{1,${MAX_BLOCK_HEIGHT_DIGITS}}$`)
+    const namespacePattern = new RegExp(`^\\d{${MIN_NAMESPACE_DIGITS},${MAX_NAMESPACE_DIGITS}}$`)
     
-
-    if (/^\d{13,15}$/.test(trimmedInput)) return 'namespace'
+    if (namespacePattern.test(trimmedInput)) return 'namespace'
+    if (blockHeightPattern.test(trimmedInput)) return 'block_or_namespace'
     
-
     if (/^[a-zA-Z]+( [a-zA-Z]+)*$/.test(trimmedInput)) return 'rollup_name'
     
     return 'invalid'
@@ -88,10 +86,13 @@ export default function SearchInterface() {
 
 
   const performLiveSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim() || searchQuery.trim().length < 1) {
+    if (!searchQuery.trim() || searchQuery.trim().length < MIN_SEARCH_LENGTH) {
       setLiveResults([])
       return
     }
+
+    if (searchRef.current === searchQuery.trim()) return
+    searchRef.current = searchQuery.trim()
 
     const searchType = detectSearchType(searchQuery)
     if (searchType === 'invalid') {
@@ -99,8 +100,7 @@ export default function SearchInterface() {
       return
     }
 
-
-    if (searchQuery.trim().length < 2 && !/^\d+$/.test(searchQuery.trim())) {
+    if (searchQuery.trim().length < MIN_SEARCH_LENGTH_NON_NUMERIC && !/^\d+$/.test(searchQuery.trim())) {
       setLiveResults([])
       return
     }
@@ -308,7 +308,7 @@ export default function SearchInterface() {
         setLiveResults([])
         setSelectedResults([])
       }
-    }, 300)
+    }, SEARCH_DEBOUNCE_MS)
 
     return () => {
       clearTimeout(handler)
@@ -316,58 +316,13 @@ export default function SearchInterface() {
   }, [query, performLiveSearch, selectedResults])
 
 
-  useEffect(() => {
-    initializeRollupResolver().catch(() => {})
-  }, [currentNetwork])
 
 
   useEffect(() => {
-    const startStreaming = async () => {
-      try {
-        const stream = getBlockStream()
+    initializeRollupResolver().catch(() => {
+    });
+  }, []);
 
-
-        stream.onBlock((block: StreamingBlock) => {
-
-          setStreamingBlocks(prev => {
-            const updated = [block, ...prev].slice(0, 10)
-            return updated
-          })
-        })
-
-
-        stream.onStats((stats: StreamingStats) => {
-          setStreamingStats(stats)
-        })
-
-        stream.onError((error: Error) => {
-
-          setLiveStreaming(false)
-        })
-
-
-        await stream.connect()
-        setLiveStreaming(true)
-        
-
-
-      } catch {
-
-        setLiveStreaming(false)
-      }
-    }
-
-
-    startStreaming()
-
-
-    return () => {
-
-      setLiveStreaming(false)
-      setStreamingBlocks([])
-      setStreamingStats(null)
-    }
-  }, [currentNetwork])
 
 
   const handleResultSelect = useCallback((result: SearchResult) => {
@@ -399,14 +354,10 @@ export default function SearchInterface() {
   }, [query, liveResults, performLiveSearch])
 
 
-  const handleStreamingBlockSelect = useCallback((height: number) => {
-    setQuery(height.toString())
-    setIsActive(false)
-  }, [])
 
   return (
     <div className="space-y-8">
-      <LiveStats liveStreaming={liveStreaming} networkData={networkData} />
+      <LiveStats liveStreaming={false} networkData={networkData} />
 
       <div className="relative">
         <SearchInput
@@ -422,11 +373,11 @@ export default function SearchInterface() {
           isActive={isActive}
           liveResults={liveResults}
           isSearching={isSearching}
-          liveStreaming={liveStreaming}
+          liveStreaming={false}
           query={query}
-          streamingBlocks={streamingBlocks}
+          streamingBlocks={[]}
           onResultSelect={handleResultSelect}
-          onStreamingBlockSelect={handleStreamingBlockSelect}
+          onStreamingBlockSelect={() => {}}
         />
       </div>
 
