@@ -66,6 +66,7 @@ jspm_packages/
 # Next.js
 .next/
 .vercel/
+next-env.d.ts
 
 # Turbo
 .turbo/
@@ -83,3 +84,13 @@ next-env.d.ts
 # Temporary files
 *.tmp
 *.temp
+
+# Schema files
+*schemas.json
+*.json:Zone.Identifier
+
+# Windows files
+Thumbs.db
+
+# Claude Code settings
+.claude/

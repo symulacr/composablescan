@@ -7,3 +7,4 @@ See the [Contributor Covenant](https://www.contributor-covenant.org/).
 2. Create a branch: `feature/<name>` or `fix/<name>`
 3. Commit small changes with clear messages
 4. Open a pull request
+
