@@ -93,4 +93,4 @@ next-env.d.ts
 Thumbs.db
 
 # Claude Code settings
-.claude/
+.claude/package-lock.json
