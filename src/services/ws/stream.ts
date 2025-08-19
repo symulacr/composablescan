@@ -34,29 +34,27 @@ export class EspressoBlockStream {
   }
 
   async connect() {
-    try {
-      if (typeof window === 'undefined' || typeof WebSocket === 'undefined') {
-        if (this.onErrorCallback) {
-          this.onErrorCallback(new Error('WebSocket not supported'));
-        }
-        return;
+    if (typeof window === 'undefined' || typeof WebSocket === 'undefined') {
+      if (this.onErrorCallback) {
+        this.onErrorCallback(new Error('WebSocket not supported'));
       }
-      
-      const latestHeight = await getLatestBlockHeight();
-      this.startHeight = latestHeight;
-      
-      const wsUrl = getWebSocketUrl(`/availability/stream/blocks/${latestHeight}`);
+      return;
+    }
+    
+    const latestHeight = await getLatestBlockHeight();
+    this.startHeight = latestHeight;
+    
+    const wsUrl = getWebSocketUrl(`/availability/stream/blocks/${latestHeight}`);
 
-      this.ws = new WebSocket(wsUrl);
+    this.ws = new WebSocket(wsUrl);
 
-      this.ws.onopen = () => {
+    this.ws.onopen = () => {
 
-        this.reconnectAttempts = 0;
-      };
+      this.reconnectAttempts = 0;
+    };
 
-      this.ws.onmessage = (event) => {
-        try {
-          const blockData = JSON.parse(event.data);
+    this.ws.onmessage = (event) => {
+      const blockData = JSON.parse(event.data);
           
 
           const streamingBlock: StreamingBlock = {
@@ -136,12 +134,6 @@ export class EspressoBlockStream {
           } else {
 
           }
-        } catch (error) {
-
-          if (this.onErrorCallback) {
-            this.onErrorCallback(new Error('Failed to parse block data'));
-          }
-        }
       };
 
       this.ws.onerror = (error) => {
@@ -165,12 +157,6 @@ export class EspressoBlockStream {
         }
       };
 
-    } catch (error) {
-
-      if (this.onErrorCallback) {
-        this.onErrorCallback(error as Error);
-      }
-    }
   }
 
   private attemptReconnect() {
@@ -191,11 +177,7 @@ export class EspressoBlockStream {
 
     
     setTimeout(async () => {
-      try {
-        await this.connect();
-      } catch (error) {
-        await this.connect();
-      }
+      await this.connect();
     }, delay);
   }
 

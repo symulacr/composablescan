@@ -1,7 +1,7 @@
 "use client"
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
-import { ExternalLink, ChevronDown, ChevronRight, Loader2 } from "lucide-react"
+import { ExternalLink, Loader2 } from "lucide-react"
 import { formatBlockSize, formatBlockTime, getBlockTransactionsBatch } from '@/services/api/main'
 import { getRollupName, getAllRollups } from '@/services/api/resolver'
 interface Transaction {
@@ -21,6 +21,36 @@ interface SearchDetailsProps {
   selectedResults: SearchResult[]
 }
 
+// Foundation component interfaces
+interface DetailHeaderProps {
+  children: React.ReactNode
+  variant?: 'default' | 'error'
+}
+
+interface FieldRowProps {
+  label: string
+  value: string | React.ReactNode
+  copyable?: string
+  className?: string
+}
+
+interface HashDisplayProps {
+  label: string
+  hash: string
+  className?: string
+}
+
+interface InfoGridProps {
+  children: React.ReactNode
+  className?: string
+}
+
+interface ExternalLinkProps {
+  href: string
+  children: React.ReactNode
+  className?: string
+}
+
 const CopyButton = ({ text, label = "Copy" }: { text: string; label?: string }) => (
   <button 
     onClick={() => navigator.clipboard.writeText(text)}
@@ -31,6 +61,47 @@ const CopyButton = ({ text, label = "Copy" }: { text: string; label?: string }) 
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
     </svg>
   </button>
+)
+
+// Foundation Components
+const DetailHeader = ({ children, variant = 'default' }: DetailHeaderProps) => (
+  <h3 className={`text-lg font-medium mb-4 ${
+    variant === 'error' ? 'text-red-600' : 'text-gray-900'
+  }`}>{children}</h3>
+)
+
+const FieldRow = ({ label, value, copyable, className = "" }: FieldRowProps) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    <span className="text-gray-500">{label}:</span>
+    <span className="ml-3 font-mono text-sm text-gray-900">{value}</span>
+    {copyable && <CopyButton text={copyable} label={label.toLowerCase()} />}
+  </div>
+)
+
+const HashDisplay = ({ label, hash, className = "" }: HashDisplayProps) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    <span className="text-gray-500">{label}:</span>
+    <span className="ml-3 font-mono text-sm text-gray-900 break-all">{hash}</span>
+    <CopyButton text={hash} label={label.toLowerCase()} />
+  </div>
+)
+
+const InfoGrid = ({ children, className = "" }: InfoGridProps) => (
+  <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 text-sm ${className}`}>
+    {children}
+  </div>
+)
+
+const ExternalLinkComponent = ({ href, children, className = "" }: ExternalLinkProps) => (
+  <a 
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`text-blue-600 hover:text-blue-800 underline flex items-center gap-1 ${className}`}
+  >
+    {children}
+    <ExternalLink className="w-3 h-3" />
+  </a>
 )
 
 export default function SearchDetails({ selectedResults }: SearchDetailsProps) {
@@ -88,25 +159,17 @@ function BlockDetails({ result }: { result: SearchResult }) {
     if (!showTransactions && batchState.transactions.length === 0 && numTransactions > 0) {
       setBatchState(prev => ({ ...prev, loading: true, error: null, progress: 0, total: 0 }))
       
-      try {
-        const blockTransactions = await getBlockTransactionsBatch(blockHeight)
-        const namespaces = new Set(blockTransactions.map(tx => tx.namespace))
-        
-        setBatchState(prev => ({
-          ...prev,
-          loading: false,
-          transactions: blockTransactions,
-          namespaces,
-          progress: 1,
-          total: 1
-        }))
-      } catch (error) {
-        setBatchState(prev => ({ 
-          ...prev, 
-          loading: false, 
-          error: error instanceof Error ? error.message : 'Failed to load transactions'
-        }))
-      }
+      const blockTransactions = await getBlockTransactionsBatch(blockHeight)
+      const namespaces = new Set(blockTransactions.map(tx => tx.namespace))
+      
+      setBatchState(prev => ({
+        ...prev,
+        loading: false,
+        transactions: blockTransactions,
+        namespaces,
+        progress: 1,
+        total: 1
+      }))
     }
     setShowTransactions(!showTransactions)
   }
@@ -128,47 +191,37 @@ function BlockDetails({ result }: { result: SearchResult }) {
 
   return (
     <div className="space-y-6">
-      <div className="text-lg font-medium text-gray-900">
+      <DetailHeader>
         Block #{String(blockHeight || 'Unknown')}
-      </div>
+      </DetailHeader>
 
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-gray-900 break-all">
-            Hash: {(result.data as any)?.hash || 'N/A'}
-          </span>
-          <CopyButton text={(result.data as any)?.hash || ''} label="block hash" />
-        </div>
-      </div>
+      <HashDisplay 
+        label="Hash" 
+        hash={(result.data as any)?.hash || 'N/A'}
+      />
 
-      <div className="grid grid-cols-1 gap-y-4 text-sm">
-        <div>
-          <span className="text-gray-500">Height:</span>
-          <span className="ml-2 font-mono text-gray-900">{blockHeight}</span>
-        </div>
-        <div>
-          <span className="text-gray-500">Timestamp:</span>
-          <span className="ml-2 font-mono text-gray-900">
-            {new Date(((result.data as any)?.timestamp || 0) * 1000).toLocaleString()}
-          </span>
-        </div>
-        <div>
-          <span className="text-gray-500">Size:</span>
-          <span className="ml-2 font-mono text-gray-900">
-            {(result.data as any)?.human_readable_size || 
-             ((result.data as any)?.size ? `${(result.data as any).size} bytes` : 'N/A')}
-          </span>
-        </div>
-        <div>
-          <span className="text-gray-500">Fee:</span>
-          <span className="ml-2 font-mono text-gray-900">
-            {(result.data as any)?.fee_info?.amount 
-              ? (parseInt((result.data as any).fee_info.amount, 10) / 1e18).toFixed(6)
-              : '0.000000'
-            }
-          </span>
-        </div>
-      </div>
+      <InfoGrid>
+        <FieldRow 
+          label="Height" 
+          value={blockHeight.toString()}
+        />
+        <FieldRow 
+          label="Timestamp" 
+          value={new Date(((result.data as any)?.timestamp || 0) * 1000).toLocaleString()}
+        />
+        <FieldRow 
+          label="Size" 
+          value={(result.data as any)?.human_readable_size || 
+                 ((result.data as any)?.size ? `${(result.data as any).size} bytes` : 'N/A')}
+        />
+        <FieldRow 
+          label="Fee" 
+          value={`${(result.data as any)?.fee_info?.amount 
+            ? (parseInt((result.data as any).fee_info.amount, 10) / 1e18).toFixed(6)
+            : '0.000000'
+          } ETH`}
+        />
+      </InfoGrid>
 
       {numTransactions > 0 && (
         <div>
@@ -284,61 +337,77 @@ function BlockDetails({ result }: { result: SearchResult }) {
 }
 
 function TransactionDetails({ result }: { result: SearchResult }) {
+  // Type guards and data extraction
+  const hasTransactionData = result.data && typeof result.data === 'object' && 'transaction' in result.data
+  const transactionData = hasTransactionData ? (result.data as any) : null
+  const transaction = transactionData?.transaction
+  
+  // Extract values with proper fallbacks
+  const getTransactionIndex = () => {
+    if (transactionData?.index !== undefined) return transactionData.index
+    if (transaction?.index !== undefined) return transaction.index
+    return '?'
+  }
+  
+  const getNamespaceDisplay = () => {
+    if (transaction?.namespace === undefined) return null
+    const namespace = transaction.namespace
+    const rollupName = getRollupName(namespace)
+    return rollupName ? `${namespace} (${rollupName})` : namespace
+  }
+
   return (
-    <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Transaction Details</h3>
-      <div className="grid grid-cols-1 gap-4 text-sm">
-        <div>
-          <span className="text-gray-500">Transaction Hash:</span>
-          <span className="ml-2 font-mono text-xs text-gray-900">{result.query}</span>
-          <CopyButton text={result.query} label="transaction hash" />
-        </div>
-        {result.data && typeof result.data === 'object' && 'transaction' in result.data ? (
+    <div className="space-y-4">
+      <DetailHeader>Transaction Details</DetailHeader>
+      
+      <div className="space-y-4">
+        <HashDisplay 
+          label="Transaction Hash" 
+          hash={result.query}
+        />
+        
+        {hasTransactionData ? (
           <>
-            <div>
-              <span className="text-gray-500">Size:</span>
-              <span className="ml-2 font-mono text-gray-900">{(result.data as any).transaction?.tx_size_bytes ? formatBlockSize((result.data as any).transaction.tx_size_bytes) : 'Unknown'}</span>
-              <span className="ml-8 text-gray-500">Block Height:</span>
-              <span className="ml-2 font-mono text-gray-900">{(result.data as any).block_height || 'Unknown'}</span>
-              <span className="ml-8 text-gray-500">Index:</span>
-              <span className="ml-2 font-mono text-gray-900">#{
-                (() => {
-                  const data = result.data as any;
-                  return data.index !== undefined ? data.index : 
-                         data.transaction?.index !== undefined ? data.transaction.index : '?';
-                })()
-              }</span>
-              {(result.data as any).transaction?.namespace !== undefined && (
-                <>
-                  <span className="ml-8 text-gray-500">Namespace:</span>
-                  <span className="ml-2 font-mono text-gray-900">
-                    {(() => {
-                      const namespace = (result.data as any).transaction.namespace
-                      const rollupName = getRollupName(namespace)
-                      return rollupName ? `${namespace} (${rollupName})` : namespace
-                    })()}
-                  </span>
-                </>
+            <InfoGrid>
+              <FieldRow 
+                label="Size" 
+                value={transaction?.tx_size_bytes ? formatBlockSize(transaction.tx_size_bytes) : 'Unknown'}
+              />
+              <FieldRow 
+                label="Block Height" 
+                value={transactionData.block_height || 'Unknown'}
+              />
+              <FieldRow 
+                label="Index" 
+                value={`#${getTransactionIndex()}`}
+              />
+              {transaction?.namespace !== undefined && (
+                <FieldRow 
+                  label="Namespace" 
+                  value={getNamespaceDisplay() || 'Unknown'}
+                />
               )}
-            </div>
-            {(result.data as any).transaction?.block_hash && (
-              <div>
-                <span className="text-gray-500">Block Hash:</span>
-                <span className="ml-2 font-mono text-xs text-gray-900">{(result.data as any).transaction.block_hash}</span>
-                <CopyButton text={(result.data as any).transaction.block_hash} label="block hash" />
-              </div>
+            </InfoGrid>
+            
+            {transaction?.block_hash && (
+              <HashDisplay 
+                label="Block Hash" 
+                hash={transaction.block_hash}
+              />
             )}
-            {(result.data as any).transaction?.timestamp && (
-              <div>
-                <span className="text-gray-500">Timestamp:</span>
-                <div className="font-mono text-gray-900">{(result.data as any).transaction.timestamp ? formatBlockTime((result.data as any).transaction.timestamp) : 'Unknown'}</div>
-              </div>
+            
+            {transaction?.timestamp && (
+              <FieldRow 
+                label="Timestamp" 
+                value={formatBlockTime(transaction.timestamp) || 'Unknown'}
+              />
             )}
-            {(result.data as any).transaction?.human_readable_time && (
-              <div>
-                <span className="text-gray-500">Time Ago:</span>
-                <div className="font-mono text-gray-900">{(result.data as any).transaction.human_readable_time}</div>
-              </div>
+            
+            {transaction?.human_readable_time && (
+              <FieldRow 
+                label="Time Ago" 
+                value={transaction.human_readable_time}
+              />
             )}
           </>
         ) : null}
@@ -349,63 +418,44 @@ function TransactionDetails({ result }: { result: SearchResult }) {
 
 function NamespaceDetails({ result }: { result: SearchResult }) {
   const namespaceId = parseInt(result.query)
-
   const rollupData = getAllRollups().find(rollup => rollup.namespace === namespaceId)
   
   if (rollupData) {
-
     return (
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">{rollupData.name}</h3>
-        <div className="space-y-3 text-sm">
-          <div>
-            <span className="text-gray-500">Namespace:</span>
-            <div className="font-mono text-gray-900">{rollupData.namespace}</div>
-          </div>
-          <div>
-            <span className="text-gray-500">Website:</span>
-            <div>
-              <a 
-                href={rollupData.website} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline break-all"
-              >
-                {rollupData.website}
-              </a>
-            </div>
-          </div>
-          <div>
-            <span className="text-gray-500">Scan:</span>
-            <div>
-              <a 
-                href={rollupData.scan} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline break-all"
-              >
-                {rollupData.scan}
-              </a>
-            </div>
-          </div>
-        </div>
+      <div className="space-y-4">
+        <DetailHeader>{rollupData.name}</DetailHeader>
+        
+        <InfoGrid>
+          <FieldRow 
+            label="Namespace" 
+            value={rollupData.namespace.toString()}
+          />
+          <FieldRow 
+            label="Website" 
+            value={<ExternalLinkComponent href={rollupData.website} className="break-all">{rollupData.website}</ExternalLinkComponent>}
+          />
+          <FieldRow 
+            label="Scan" 
+            value={<ExternalLinkComponent href={rollupData.scan} className="break-all">{rollupData.scan}</ExternalLinkComponent>}
+          />
+        </InfoGrid>
       </div>
     )
   } else {
-
     return (
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Namespace #{result.query}</h3>
-        <div className="space-y-2 text-sm">
-          <div>
-            <span className="text-gray-500">Namespace ID:</span>
-            <div className="font-mono text-gray-900">{result.query}</div>
-          </div>
-          <div>
-            <span className="text-gray-500">Status:</span>
-            <div className="text-gray-900">No associated rollup found</div>
-          </div>
-        </div>
+      <div className="space-y-4">
+        <DetailHeader>Namespace #{result.query}</DetailHeader>
+        
+        <InfoGrid>
+          <FieldRow 
+            label="Namespace ID" 
+            value={result.query}
+          />
+          <FieldRow 
+            label="Status" 
+            value="No associated rollup found"
+          />
+        </InfoGrid>
       </div>
     )
   }
@@ -413,50 +463,31 @@ function NamespaceDetails({ result }: { result: SearchResult }) {
 
 function RollupDetails({ result }: { result: SearchResult }) {
   return (
-    <div>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Rollup Search Results</h3>
+    <div className="space-y-4">
+      <DetailHeader>Rollup Search Results</DetailHeader>
+      
       {Array.isArray(result.data) && (result.data as any[]).length > 0 ? (
         <div className="space-y-4">
           {(result.data as any[]).map((rollup, rollupIndex) => (
             <div key={rollupIndex} className="border-l-4 border-blue-400 pl-4">
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-500">Name:</span>
-                  <div className="font-medium text-gray-900">{rollup.name}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Namespace:</span>
-                  <div className="font-mono text-gray-900">{rollup.namespace}</div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Website:</span>
-                  <div>
-                    <a 
-                      href={rollup.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                    >
-                      {rollup.website}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-500">Scan:</span>
-                  <div>
-                    <a 
-                      href={rollup.scan} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
-                    >
-                      {rollup.scan}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </div>
-              </div>
+              <InfoGrid>
+                <FieldRow 
+                  label="Name" 
+                  value={rollup.name}
+                />
+                <FieldRow 
+                  label="Namespace" 
+                  value={rollup.namespace}
+                />
+                <FieldRow 
+                  label="Website" 
+                  value={<ExternalLinkComponent href={rollup.website} className="break-all">{rollup.website}</ExternalLinkComponent>}
+                />
+                <FieldRow 
+                  label="Scan" 
+                  value={<ExternalLinkComponent href={rollup.scan} className="break-all">{rollup.scan}</ExternalLinkComponent>}
+                />
+              </InfoGrid>
             </div>
           ))}
         </div>
@@ -469,8 +500,8 @@ function RollupDetails({ result }: { result: SearchResult }) {
 
 function ErrorDetails({ result }: { result: SearchResult }) {
   return (
-    <div>
-      <h3 className="text-lg font-medium text-red-600 mb-4">Search Error</h3>
+    <div className="space-y-4">
+      <DetailHeader variant="error">Search Error</DetailHeader>
       <div className="text-sm text-red-500">
         {(result.data as any)?.error}
       </div>

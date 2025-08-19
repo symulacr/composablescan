@@ -17,7 +17,7 @@ interface LiveStatsProps {
 export default function LiveStats({ liveStreaming, networkData }: LiveStatsProps) {
   return (
     <div className="text-center space-y-6">
-      <h1 className="text-5xl font-medium tracking-wide text-gray-900">COMPOSABLE SCAN</h1>
+      <h1 className="text-3xl font-medium tracking-wide text-gray-900">COMPOSABLE SCAN</h1>
       <div className="flex items-center justify-center gap-x-4 text-sm text-gray-600 overflow-x-auto">
         <span className="flex items-center gap-1 whitespace-nowrap">
           {networkData.isConnected ? (

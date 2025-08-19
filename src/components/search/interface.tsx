@@ -103,8 +103,7 @@ export default function SearchInterface() {
 
     setIsSearching(true)
 
-    try {
-      const results: SearchResult[] = []
+    const results: SearchResult[] = []
 
 
       results.push({
@@ -117,96 +116,56 @@ export default function SearchInterface() {
 
 
       if (searchType === 'transaction') {
-        try {
-
-          const cleanQuery = searchQuery.startsWith('TX~') ? searchQuery : `TX~${searchQuery}`
-          const txData = await getTransactionByHash(cleanQuery)
-          results.splice(-1, 1)
-          results.push({
-            type: 'transaction',
-            data: txData,
-            query: searchQuery,
-            displayText: `Transaction ${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}`
-          })
-        } catch {
-          results.splice(-1, 1)
-          results.push({
-            type: 'error',
-            data: { error: `Transaction not found: ${searchQuery}` },
-            query: searchQuery
-          })
-        }
+        const cleanQuery = searchQuery.startsWith('TX~') ? searchQuery : `TX~${searchQuery}`
+        const txData = await getTransactionByHash(cleanQuery)
+        results.splice(-1, 1)
+        results.push({
+          type: 'transaction',
+          data: txData,
+          query: searchQuery,
+          displayText: `Transaction ${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}`
+        })
       } 
       else if (searchType === 'block_hash') {
-        try {
-
-          const blockHashQuery = searchQuery.startsWith('BLOCK~') ? searchQuery : `BLOCK~${searchQuery}`
-          const blockData = await getBlockByHash(blockHashQuery)
-          results.splice(-1, 1)
-          results.push({
-            type: 'block_hash',
-            data: blockData,
-            query: searchQuery,
-            displayText: `Block Hash ${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}`
-          })
-        } catch {
-          results.splice(-1, 1)
-          results.push({
-            type: 'error',
-            data: { error: `Block hash not found: ${searchQuery}` },
-            query: searchQuery
-          })
-        }
+        const blockHashQuery = searchQuery.startsWith('BLOCK~') ? searchQuery : `BLOCK~${searchQuery}`
+        const blockData = await getBlockByHash(blockHashQuery)
+        results.splice(-1, 1)
+        results.push({
+          type: 'block_hash',
+          data: blockData,
+          query: searchQuery,
+          displayText: `Block Hash ${searchQuery.substring(0, 20)}${searchQuery.length > 20 ? '...' : ''}`
+        })
       }
       else if (searchType === 'block_or_namespace') {
         const blockHeight = parseInt(searchQuery)
         
 
-        try {
-          const blockData = await getBlock(blockHeight)
-          results.splice(-1, 1)
-          results.push({
-            type: 'block',
-            data: blockData,
-            query: searchQuery,
-            displayText: `Block #${blockHeight}`
-          })
-        } catch {
-
-        }
+        const blockData = await getBlock(blockHeight)
+        results.splice(-1, 1)
+        results.push({
+          type: 'block',
+          data: blockData,
+          query: searchQuery,
+          displayText: `Block #${blockHeight}`
+        })
 
 
         const rollupName = getRollupName(blockHeight)
         if (rollupName) {
 
-          try {
-
-            const namespaceData = { namespace: blockHeight }
-            
-            if (!results.find(r => r.type === 'block')) {
-              results.splice(-1, 1)
-            }
-            
-            results.push({
-              type: 'namespace',
-              data: namespaceData,
-              query: searchQuery,
-              displayText: `Namespace #${blockHeight} (${rollupName})`
-            })
-            
-          } catch {
-
-            if (!results.find(r => r.type === 'block')) {
-              results.splice(-1, 1)
-            }
-            
-            results.push({
-              type: 'namespace',
-              data: { namespace: blockHeight },
-              query: searchQuery,
-              displayText: `Namespace #${blockHeight} (${rollupName})`
-            })
+          const namespaceData = { namespace: blockHeight }
+          
+          if (!results.find(r => r.type === 'block')) {
+            results.splice(-1, 1)
           }
+          
+          results.push({
+            type: 'namespace',
+            data: namespaceData,
+            query: searchQuery,
+            displayText: `Namespace #${blockHeight} (${rollupName})`
+          })
         }
 
       }
@@ -217,29 +176,16 @@ export default function SearchInterface() {
         
         if (rollupName) {
 
-          try {
-
-            const namespaceData = { namespace: namespaceId }
-            
-            results.splice(-1, 1)
-            
-            results.push({
-              type: 'namespace',
-              data: namespaceData,
-              query: searchQuery,
-              displayText: `Namespace #${namespaceId} (${rollupName})`
-            })
-            
-          } catch {
-            results.splice(-1, 1)
-
-            results.push({
-              type: 'namespace',
-              data: { namespace: namespaceId },
-              query: searchQuery,
-              displayText: `Namespace #${namespaceId} (${rollupName})`
-            })
-          }
+          const namespaceData = { namespace: namespaceId }
+          
+          results.splice(-1, 1)
+          
+          results.push({
+            type: 'namespace',
+            data: namespaceData,
+            query: searchQuery,
+            displayText: `Namespace #${namespaceId} (${rollupName})`
+          })
         } else {
 
           results.splice(-1, 1)
@@ -251,44 +197,26 @@ export default function SearchInterface() {
         }
       }
       else if (searchType === 'rollup_name') {
-        try {
-          const rollupData = await universalRollupSearch(searchQuery)
-          results.splice(-1, 1)
-          if (rollupData && rollupData.length > 0) {
-            results.push({
-              type: 'rollup',
-              data: rollupData,
-              query: searchQuery,
-              displayText: `Rollup "${searchQuery}"`
-            })
-          } else {
-            results.push({
-              type: 'error',
-              data: { error: `No rollup found: ${searchQuery}` },
-              query: searchQuery
-            })
-          }
-        } catch {
-          results.splice(-1, 1)
+        const rollupData = await universalRollupSearch(searchQuery)
+        results.splice(-1, 1)
+        if (rollupData && rollupData.length > 0) {
+          results.push({
+            type: 'rollup',
+            data: rollupData,
+            query: searchQuery,
+            displayText: `Rollup "${searchQuery}"`
+          })
+        } else {
           results.push({
             type: 'error',
-            data: { error: `Rollup search failed: ${searchQuery}` },
+            data: { error: `No rollup found: ${searchQuery}` },
             query: searchQuery
           })
         }
       }
 
       setLiveResults(results.filter(r => r.type !== 'loading'))
-    } catch {
-
-      setLiveResults([{
-        type: 'error',
-        data: { error: error instanceof Error ? error.message : 'Search failed' },
-        query: searchQuery
-      }])
-    } finally {
       setIsSearching(false)
-    }
   }, [currentNetwork, currentData.latestBlock, detectSearchType])
 
 
@@ -315,8 +243,7 @@ export default function SearchInterface() {
 
 
   useEffect(() => {
-    initializeRollupResolver().catch(() => {
-    });
+    initializeRollupResolver();
   }, []);
 
 

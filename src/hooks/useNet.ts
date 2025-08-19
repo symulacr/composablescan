@@ -34,30 +34,22 @@ export function useNetData() {
   }))
   const lastStatsUpdateBlock = useRef(0)
 
-  const fetchTransactionCount = async () => {
+  const fetchNetworkStats = async () => {
     try {
-      const totalTxns = await getTotalTransactions()
-      setChainData(prev => ({
-        ...prev,
-        totalTransactions: totalTxns
-      }))
-    } catch (error) {
-    }
-  }
-
-  const fetchDataAndSuccess = async () => {
-    try {
-      const [totalPayload, successRate] = await Promise.all([
+      const [totalTxns, totalPayload, successRate] = await Promise.all([
+        getTotalTransactions(),
         getTotalPayloadSize(), 
         getSuccessRate()
       ])
       
       setChainData(prev => ({
         ...prev,
+        totalTransactions: totalTxns,
         totalPayloadSize: totalPayload,
         successRate: successRate
       }))
     } catch (error) {
+      // Keep previous values on error
     }
   }
 
@@ -82,7 +74,7 @@ export function useNetData() {
 
       if (block.height - lastStatsUpdateBlock.current >= 5) {
         lastStatsUpdateBlock.current = block.height
-        fetchTransactionCount()
+        fetchNetworkStats()
       }
     }
     
@@ -106,10 +98,7 @@ export function useNetData() {
     stream.onError(handleError)
     
     const initializeStream = async () => {
-      try {
-        await stream.connect()
-      } catch (error) {
-      }
+      await stream.connect()
     }
     
     initializeStream()
@@ -120,11 +109,7 @@ export function useNetData() {
   }, [])
 
   useEffect(() => {
-    fetchTransactionCount()
-    fetchDataAndSuccess()
-    
-    const interval = setInterval(fetchDataAndSuccess, 5 * 60 * 1000)
-    return () => clearInterval(interval)
+    fetchNetworkStats()
   }, [])
 
   return chainData

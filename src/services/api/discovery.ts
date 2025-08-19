@@ -6,10 +6,6 @@ export async function makeApiCall(url: string): Promise<Response> {
     headers: { 'Content-Type': 'application/json' }
   })
   
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
-  
   return response
 }
 
@@ -24,7 +20,7 @@ export async function getLatestBlockHeight(): Promise<number> {
     return latestHeight
   }
   
-  throw new Error(`Invalid block height received: ${latestHeight}`)
+  return 0
 }
 
 export async function getTotalTransactions(): Promise<number> {
@@ -36,7 +32,7 @@ export async function getTotalTransactions(): Promise<number> {
     return total
   }
   
-  throw new Error(`Invalid transaction count received: ${total}`)
+  return 0
 }
 
 export async function getTotalPayloadSize(): Promise<number> {
@@ -48,7 +44,7 @@ export async function getTotalPayloadSize(): Promise<number> {
     return size
   }
   
-  throw new Error(`Invalid payload size received: ${size}`)
+  return 0
 }
 
 export async function getSuccessRate(): Promise<number> {
@@ -60,7 +56,7 @@ export async function getSuccessRate(): Promise<number> {
     return rate
   }
   
-  throw new Error(`Invalid success rate received: ${rate}`)
+  return 0
 }
 
 

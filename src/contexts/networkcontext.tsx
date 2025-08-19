@@ -36,7 +36,17 @@ export function NetworkProvider({ children }: NetProviderProps) {
 export function useNetwork() {
   const context = useContext(NetContext)
   if (context === undefined) {
-    throw new Error('useNetwork must be used within a NetworkProvider')
+    return {
+      currentNetwork: 'mainnet' as const,
+      networkInfo: {
+        name: 'mainnet',
+        apiBaseUrl: '',
+        apiVersion: '',
+        wsBaseUrl: '',
+        scanBaseUrl: '',
+        webWorkerUrl: ''
+      }
+    }
   }
   return context
 }

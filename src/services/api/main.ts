@@ -16,153 +16,124 @@ export const getCurrentNetwork = () => MAINNET_CONFIG;
 async function makeOptimizedCall(endpoint: string, filterPayload: boolean = true) {
   const url = getApiUrl(endpoint);
   
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  const data = await response.json();
+  
+
+  if (filterPayload && data) {
+    if (data.transaction?.payload) {
+      delete data.transaction.payload;
     }
-
-    const data = await response.json();
-    
-
-    if (filterPayload && data) {
-      if (data.transaction?.payload) {
-        delete data.transaction.payload;
-      }
-      if (data.proof?.payload_proof_tx?.proofs) {
-        delete data.proof.payload_proof_tx.proofs;
-      }
+    if (data.proof?.payload_proof_tx?.proofs) {
+      delete data.proof.payload_proof_tx.proofs;
     }
-    
-    return data;
-  } catch (error) {
-
-    throw error;
-  }
-}
-
-
-export async function getBlockByHash(hash: string) {
-  try {
-
-    const hashForApi = hash.startsWith('BLOCK~') ? hash : `BLOCK~${hash}`;
-    
-    const blockHashUrl = getApiUrl(`/availability/block/hash/${encodeURIComponent(hashForApi)}`)
-    const response = await makeApiCall(blockHashUrl);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: Failed to fetch block with hash ${hash}`);
-    }
-    
-    const blockData = await response.json();
-    
-    const blockHeight = blockData.header?.fields?.height || 0;
-    const blockHash = blockData.hash || hash;
-    const timestamp = blockData.header?.fields?.timestamp || 0;
-    const sizeBytes = blockData.size || 0;
-    const numTransactions = blockData.num_transactions || 0;
-    
-
-    return {
-      height: blockHeight,
-      hash: blockHash,
-      timestamp: timestamp,
-      size: sizeBytes,
-      transactions: numTransactions,
-      num_transactions: numTransactions,
-      header: blockData.header,
-      human_readable_time: formatBlockTime(timestamp),
-      human_readable_size: formatBlockSize(sizeBytes),
-      l1_head: blockData.header?.fields?.l1_head || null,
-      l1_finalized: blockData.header?.fields?.l1_finalized || null,
-      chain_id: blockData.header?.fields?.chain_config?.chain_config?.Left?.chain_id || null,
-      fee_info: blockData.header?.fields?.fee_info || null,
-      builder_commitment: blockData.header?.fields?.builder_commitment || null,
-      payload_commitment: blockData.header?.fields?.payload_commitment || null
-    };
-  } catch (error) {
-
-    throw error;
-  }
-}
-
-
-
-
-export async function getBlock(height: number) {
-
-  if (!height || isNaN(height) || height < 1) {
-    throw new Error(`Invalid block height: ${height}`)
   }
   
-  try {
-    const blockSummaryUrl = getApiUrl(`/availability/block/${height}`)
-    const response = await makeApiCall(blockSummaryUrl)
-    const blockData = await response.json();
-    
-    const blockHeight = blockData.header?.fields?.height || height;
-    const blockHash = blockData.hash || null;
-    const timestamp = blockData.header?.fields?.timestamp || 0;
-    const sizeBytes = blockData.size || 0;
-    const numTransactions = blockData.num_transactions || 0;
-    
+  return data;
+}
 
-    return {
-      height: blockHeight,
-      hash: blockHash,
-      timestamp: timestamp,
-      size: sizeBytes,
-      transactions: numTransactions,
-      num_transactions: numTransactions,
-      header: blockData.header,
-      human_readable_time: formatBlockTime(timestamp),
-      human_readable_size: formatBlockSize(sizeBytes),
-      l1_head: blockData.header?.fields?.l1_head || null,
-      l1_finalized: blockData.header?.fields?.l1_finalized || null,
-      chain_id: blockData.header?.fields?.chain_config?.chain_config?.Left?.chain_id || null,
-      fee_info: blockData.header?.fields?.fee_info || null,
-      builder_commitment: blockData.header?.fields?.builder_commitment || null,
-      payload_commitment: blockData.header?.fields?.payload_commitment || null
-    };
-  } catch (error) {
 
-    throw error;
+export async function getBlockByHash(hash: string): Promise<any | null> {
+  const hashForApi = hash.startsWith('BLOCK~') ? hash : `BLOCK~${hash}`;
+  
+  const blockHashUrl = getApiUrl(`/availability/block/hash/${encodeURIComponent(hashForApi)}`)
+  const response = await makeApiCall(blockHashUrl);
+  
+  if (!response.ok) {
+    return null;
   }
+  
+  const blockData = await response.json();
+  
+  const blockHeight = blockData.header?.fields?.height || 0;
+  const blockHash = blockData.hash || hash;
+  const timestamp = blockData.header?.fields?.timestamp || 0;
+  const sizeBytes = blockData.size || 0;
+  const numTransactions = blockData.num_transactions || 0;
+  
+  return {
+    height: blockHeight,
+    hash: blockHash,
+    timestamp: timestamp,
+    size: sizeBytes,
+    transactions: numTransactions,
+    num_transactions: numTransactions,
+    header: blockData.header,
+    human_readable_time: formatBlockTime(timestamp),
+    human_readable_size: formatBlockSize(sizeBytes),
+    l1_head: blockData.header?.fields?.l1_head || null,
+    l1_finalized: blockData.header?.fields?.l1_finalized || null,
+    chain_id: blockData.header?.fields?.chain_config?.chain_config?.Left?.chain_id || null,
+    fee_info: blockData.header?.fields?.fee_info || null,
+    builder_commitment: blockData.header?.fields?.builder_commitment || null,
+    payload_commitment: blockData.header?.fields?.payload_commitment || null
+  };
 }
 
 
 
-export async function getTransactionByHash(hash: string) {
-  try {
 
-    const hashForApi = hash.startsWith('TX~') ? hash : `TX~${hash}`;
-    
-    const transactionUrl = getApiUrl(`/availability/transaction/hash/${encodeURIComponent(hashForApi)}`)
-    const response = await makeApiCall(transactionUrl);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: Failed to fetch transaction with hash ${hash}`);
-    }
-    
-    const rawData = await response.json();
-    
-    return await enhanceTransactionData(rawData, hash);
-  } catch (error) {
-
-    throw error;
+export async function getBlock(height: number): Promise<any | null> {
+  if (!height || isNaN(height) || height < 1) {
+    return null;
   }
+  
+  const blockSummaryUrl = getApiUrl(`/availability/block/${height}`)
+  const response = await makeApiCall(blockSummaryUrl)
+  const blockData = await response.json();
+  
+  const blockHeight = blockData.header?.fields?.height || height;
+  const blockHash = blockData.hash || null;
+  const timestamp = blockData.header?.fields?.timestamp || 0;
+  const sizeBytes = blockData.size || 0;
+  const numTransactions = blockData.num_transactions || 0;
+  
+  return {
+    height: blockHeight,
+    hash: blockHash,
+    timestamp: timestamp,
+    size: sizeBytes,
+    transactions: numTransactions,
+    num_transactions: numTransactions,
+    header: blockData.header,
+    human_readable_time: formatBlockTime(timestamp),
+    human_readable_size: formatBlockSize(sizeBytes),
+    l1_head: blockData.header?.fields?.l1_head || null,
+    l1_finalized: blockData.header?.fields?.l1_finalized || null,
+    chain_id: blockData.header?.fields?.chain_config?.chain_config?.Left?.chain_id || null,
+    fee_info: blockData.header?.fields?.fee_info || null,
+    builder_commitment: blockData.header?.fields?.builder_commitment || null,
+    payload_commitment: blockData.header?.fields?.payload_commitment || null
+  };
 }
 
 
-async function enhanceTransactionData(rawData: any, originalHash: string) {
+
+export async function getTransactionByHash(hash: string): Promise<any | null> {
+  const hashForApi = hash.startsWith('TX~') ? hash : `TX~${hash}`;
+  
+  const transactionUrl = getApiUrl(`/availability/transaction/hash/${encodeURIComponent(hashForApi)}`)
+  const response = await makeApiCall(transactionUrl);
+  
+  if (!response.ok) {
+    return null;
+  }
+  
+  const rawData = await response.json();
+  
+  return await enhanceTransactionData(rawData, hash);
+}
+
+
+async function enhanceTransactionData(rawData: any, originalHash: string): Promise<any | null> {
   if (!rawData || !rawData.transaction) {
-    throw new Error('Invalid transaction data');
+    return null;
   }
   
   const transaction = rawData.transaction;
@@ -215,22 +186,16 @@ async function enhanceTransactionData(rawData: any, originalHash: string) {
 
 
 
-export async function getNamespaceTransactions(height: number, namespace: number) {
-  try {
-    const namespaceUrl = getApiUrl(`/availability/block/${height}/namespace/${namespace}`)
-    const response = await makeApiCall(namespaceUrl);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: Failed to fetch namespace ${namespace} in block ${height}`);
-    }
-    
-    const namespaceData = await response.json();
-    return namespaceData;
-    
-  } catch (error) {
-
-    throw error;
+export async function getNamespaceTransactions(height: number, namespace: number): Promise<any | null> {
+  const namespaceUrl = getApiUrl(`/availability/block/${height}/namespace/${namespace}`)
+  const response = await makeApiCall(namespaceUrl);
+  
+  if (!response.ok) {
+    return null;
   }
+  
+  const namespaceData = await response.json();
+  return namespaceData;
 }
 
 interface Transaction {
@@ -266,23 +231,19 @@ function calculateBatches(totalTxs: number, batchSize: number = DEFAULT_BATCH_SI
 async function fetchBatch(height: number, offset: number, limit: number): Promise<BatchTransaction[]> {
   const url = getApiUrl(`/explorer/transactions/from/${height}/${offset}/${limit}/block/${height}`);
   
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.transaction_summaries || [];
-  } catch (error) {
+  if (!response.ok) {
     return [];
   }
+
+  const data = await response.json();
+  return data.transaction_summaries || [];
 }
 
 async function fetchAllBatches(height: number, batches: BatchRequest[]): Promise<BatchTransaction[]> {
@@ -316,25 +277,24 @@ function processTransactionSummary(tx: BatchTransaction): Transaction {
 }
 
 export async function getBlockTransactionsBatch(height: number): Promise<Transaction[]> {
-  try {
-    const blockData = await getBlock(height);
-    const totalTxs = blockData.num_transactions || 0;
-    
-    if (totalTxs === 0) {
-      return [];
-    }
-    
-    const batches = calculateBatches(totalTxs, MAX_BATCH_SIZE);
-    
-    const batchTransactions = await fetchAllBatches(height, batches);
-    
-    const sortedTransactions = sortTransactions(batchTransactions);
-    
-    return sortedTransactions.map(processTransactionSummary);
-    
-  } catch (error) {
-    throw error;
+  const blockData = await getBlock(height);
+  if (!blockData) {
+    return [];
   }
+  
+  const totalTxs = blockData.num_transactions || 0;
+  
+  if (totalTxs === 0) {
+    return [];
+  }
+  
+  const batches = calculateBatches(totalTxs, MAX_BATCH_SIZE);
+  
+  const batchTransactions = await fetchAllBatches(height, batches);
+  
+  const sortedTransactions = sortTransactions(batchTransactions);
+  
+  return sortedTransactions.map(processTransactionSummary);
 }
 
 
@@ -342,12 +302,12 @@ export async function getBlockTransactionsBatch(height: number): Promise<Transac
 
 
 
-export async function search(query: string, type: 'block' | 'transaction' | 'namespace' | 'rollup_name') {
+export async function search(query: string, type: 'block' | 'transaction' | 'namespace' | 'rollup_name'): Promise<any | null> {
   switch (type) {
     case 'block':
       const height = parseInt(query);
       if (isNaN(height) || height < 1) {
-        throw new Error('Invalid block height');
+        return null;
       }
       return {
         type: 'block',
@@ -356,7 +316,7 @@ export async function search(query: string, type: 'block' | 'transaction' | 'nam
       
     case 'transaction':
       if (!query || query.length < 3) {
-        throw new Error('Invalid transaction hash');
+        return null;
       }
       return {
         type: 'transaction', 
@@ -366,10 +326,9 @@ export async function search(query: string, type: 'block' | 'transaction' | 'nam
     case 'namespace':
       const namespaceId = parseInt(query);
       if (isNaN(namespaceId) || namespaceId < 0) {
-        throw new Error('Invalid namespace ID');
+        return null;
       }
       
-
       const latestBlockHeight = await getLatestBlockHeight();
       
       return {
@@ -378,11 +337,10 @@ export async function search(query: string, type: 'block' | 'transaction' | 'nam
       };
       
     case 'rollup_name':
-
-      throw new Error('Rollup name search requires real API endpoint');
+      return null;
       
     default:
-      throw new Error(`Unknown search type: ${type}`);
+      return null;
   }
 }
 
