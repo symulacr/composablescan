@@ -1,8 +1,6 @@
 "use client"
-
 import { Wifi, WifiOff, Layers, Hash, HardDrive, CheckCircle } from "lucide-react"
 import { formatNumber, formatBytes } from '@/services/api/main'
-
 interface NetworkData {
   latestBlock: number
   totalTransactions: number

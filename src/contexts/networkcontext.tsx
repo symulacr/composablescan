@@ -1,8 +1,6 @@
 "use client"
-
 import { createContext, useContext, ReactNode } from 'react'
 import { getCurrentNetwork } from '@/services/api/main'
-
 interface NetCtx {
   currentNetwork: 'mainnet'
   networkInfo: {

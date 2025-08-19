@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useNetwork } from '@/contexts/networkcontext'
 import { useDualNetworkData } from '@/hooks/useNet'
@@ -19,7 +18,6 @@ import SearchInput from './input'
 import SearchResults from './results'
 import SearchDetails from './details'
 import LiveStats from './stats'
-
 interface NetworkData {
   latestBlock: number
   totalTransactions: number
@@ -46,8 +44,6 @@ export default function SearchInterface() {
   const [selectedResults, setSelectedResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const searchRef = useRef('')
-
-
 
   const networkData: NetworkData = {
     latestBlock: currentData.latestBlock,

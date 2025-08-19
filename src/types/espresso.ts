@@ -1,4 +1,3 @@
-
 export interface EspressoBlock {
   height: number;
   hash?: string;
@@ -9,6 +8,7 @@ export interface EspressoBlock {
   fee_recipient?: string[];
   block_reward?: string[];
 }
+
 
 export interface EspressoTransaction {
   hash: string;
@@ -72,6 +72,7 @@ export const MAX_BATCH_SIZE = 100;
 export const API_TIMEOUT_MS = 2000;
 export const POLLING_INTERVAL_MS = 5000;
 export const NETWORK_STATS_REFRESH_MS = 30000;
+
 
 export const WS_MAX_RECONNECT_ATTEMPTS = 5;
 export const WS_INITIAL_RECONNECT_DELAY_MS = 1000;

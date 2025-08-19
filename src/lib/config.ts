@@ -6,7 +6,6 @@ interface NetworkConfig {
   scanBaseUrl: string
   webWorkerUrl: string
 }
-
 if (typeof window === 'undefined') {
   const required = [
     'NEXT_PUBLIC_MAINNET_API_BASE_URL',

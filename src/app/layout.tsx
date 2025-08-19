@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: "Composable Scan",
   description: "Scan the Espresso Network in real-time",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -1,5 +1,4 @@
 "use client"
-
 import { useRef, useCallback } from "react"
 import { Search } from "lucide-react"
 import { motion } from "framer-motion"
@@ -22,8 +21,6 @@ export default function SearchInput({
   onSearch
 }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-
-
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       onSearch()

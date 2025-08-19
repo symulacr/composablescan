@@ -1,7 +1,6 @@
 
 import { getWebSocketUrl } from '../../lib/config'
 import { getLatestBlockHeight } from '../api/discovery'
-
 export interface StreamingBlock {
   height: number;
   transactions: number;

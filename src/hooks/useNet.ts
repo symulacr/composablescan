@@ -1,10 +1,8 @@
 "use client"
-
 import { useState, useEffect, useRef } from 'react'
 import { getBlockStream } from '@/services/ws/stream'
 import type { StreamingBlock, StreamingStats } from '@/services/ws/stream'
 import { getTotalTransactions, getTotalPayloadSize, getSuccessRate } from '@/services/api/discovery'
-
 interface Block {
   height: number
   timestamp: number

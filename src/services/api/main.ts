@@ -12,7 +12,6 @@ import {
 } from '@/types/espresso'
 
 const MAINNET_CONFIG = getCurrentNetworkConfig();
-
 export const getCurrentNetwork = () => MAINNET_CONFIG;
 async function makeOptimizedCall(endpoint: string, filterPayload: boolean = true) {
   const url = getApiUrl(endpoint);
@@ -167,11 +166,11 @@ async function enhanceTransactionData(rawData: any, originalHash: string) {
   }
   
   const transaction = rawData.transaction;
-  const blockHeight = transaction.block_height || 0;
+  const blockHeight = rawData.block_height || 0;
   const index = rawData.index || 0;
   const namespace = transaction.namespace;
   
-  const blockHash = null;
+  const blockHash = rawData.block_hash || null;
   const timestamp = null;
   
 

@@ -5,7 +5,6 @@ interface RollupInfo {
   website: string;
   scan: string;
 }
-
 import { parseRollupData } from '@/lib/rollup-parser'
 
 interface RollupMapping {

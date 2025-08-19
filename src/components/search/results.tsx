@@ -1,9 +1,7 @@
 "use client"
-
 import { motion, AnimatePresence } from "framer-motion"
 import { formatNumber, formatBlockSize } from '@/services/api/main'
 import { getRollupName, getAllRollups } from '@/services/api/resolver'
-
 interface SearchResult {
   type: 'block' | 'transaction' | 'rollup' | 'namespace' | 'block_hash' | 'error' | 'loading'
   data: unknown

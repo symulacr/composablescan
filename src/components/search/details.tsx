@@ -1,11 +1,9 @@
 "use client"
-
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { ExternalLink, ChevronDown, ChevronRight, Loader2 } from "lucide-react"
 import { formatBlockSize, formatBlockTime, getBlockTransactionsBatch } from '@/services/api/main'
 import { getRollupName, getAllRollups } from '@/services/api/resolver'
-
 interface Transaction {
   hash: string;
   index: number;
@@ -143,7 +141,7 @@ function BlockDetails({ result }: { result: SearchResult }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+      <div className="grid grid-cols-1 gap-y-4 text-sm">
         <div>
           <span className="text-gray-500">Height:</span>
           <span className="ml-2 font-mono text-gray-900">{blockHeight}</span>
@@ -289,43 +287,45 @@ function TransactionDetails({ result }: { result: SearchResult }) {
   return (
     <div>
       <h3 className="text-lg font-medium text-gray-900 mb-4">Transaction Details</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div className="md:col-span-2">
+      <div className="grid grid-cols-1 gap-4 text-sm">
+        <div>
           <span className="text-gray-500">Transaction Hash:</span>
-          <div className="flex items-center gap-2">
-            <div className="font-mono text-xs text-gray-900 flex-1">{result.query}</div>
-            <CopyButton text={result.query} label="transaction hash" />
-          </div>
+          <span className="ml-2 font-mono text-xs text-gray-900">{result.query}</span>
+          <CopyButton text={result.query} label="transaction hash" />
         </div>
         {result.data && typeof result.data === 'object' && 'transaction' in result.data ? (
           <>
-            {(result.data as any).transaction?.namespace !== undefined && (
-              <div>
-                <span className="text-gray-500">Namespace:</span>
-                <div className="font-mono text-gray-900">
-                  {(() => {
-                    const namespace = (result.data as any).transaction.namespace
-                    const rollupName = getRollupName(namespace)
-                    return rollupName ? `${namespace} (${rollupName})` : namespace
-                  })()}
-                </div>
-              </div>
-            )}
             <div>
-              <span className="text-gray-500">Size (bytes):</span>
-              <div className="font-mono text-gray-900">{(result.data as any).transaction?.tx_size_bytes ? formatBlockSize((result.data as any).transaction.tx_size_bytes) : 'Unknown'}</div>
-            </div>
-            <div>
-              <span className="text-gray-500">Block Height:</span>
-              <div className="font-mono text-gray-900">{(result.data as any).transaction?.block_height || 'Unknown'}</div>
+              <span className="text-gray-500">Size:</span>
+              <span className="ml-2 font-mono text-gray-900">{(result.data as any).transaction?.tx_size_bytes ? formatBlockSize((result.data as any).transaction.tx_size_bytes) : 'Unknown'}</span>
+              <span className="ml-8 text-gray-500">Block Height:</span>
+              <span className="ml-2 font-mono text-gray-900">{(result.data as any).block_height || 'Unknown'}</span>
+              <span className="ml-8 text-gray-500">Index:</span>
+              <span className="ml-2 font-mono text-gray-900">#{
+                (() => {
+                  const data = result.data as any;
+                  return data.index !== undefined ? data.index : 
+                         data.transaction?.index !== undefined ? data.transaction.index : '?';
+                })()
+              }</span>
+              {(result.data as any).transaction?.namespace !== undefined && (
+                <>
+                  <span className="ml-8 text-gray-500">Namespace:</span>
+                  <span className="ml-2 font-mono text-gray-900">
+                    {(() => {
+                      const namespace = (result.data as any).transaction.namespace
+                      const rollupName = getRollupName(namespace)
+                      return rollupName ? `${namespace} (${rollupName})` : namespace
+                    })()}
+                  </span>
+                </>
+              )}
             </div>
             {(result.data as any).transaction?.block_hash && (
-              <div className="md:col-span-2">
+              <div>
                 <span className="text-gray-500">Block Hash:</span>
-                <div className="flex items-center gap-2">
-                  <div className="font-mono text-xs text-gray-900 flex-1">{(result.data as any).transaction.block_hash}</div>
-                  <CopyButton text={(result.data as any).transaction.block_hash} label="block hash" />
-                </div>
+                <span className="ml-2 font-mono text-xs text-gray-900">{(result.data as any).transaction.block_hash}</span>
+                <CopyButton text={(result.data as any).transaction.block_hash} label="block hash" />
               </div>
             )}
             {(result.data as any).transaction?.timestamp && (

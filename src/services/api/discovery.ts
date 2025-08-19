@@ -1,6 +1,5 @@
 
 
-
 export async function makeApiCall(url: string): Promise<Response> {
   const response = await fetch(url, {
     method: 'GET',
